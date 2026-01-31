@@ -5,11 +5,14 @@ abstract final class AppStrings {
   // Start / Auth
   static const signUpFree = 'Sign up free';
   static const continueWithGoogle = 'Continue with Google';
+  static const continueWithFacebook = 'Continue with Facebook';
   static const continueWithApple = 'Continue with Apple';
   static const alreadyHaveAccount = 'Already have an account?';
   static const signIn = 'Sign in';
   static const millionsOfSongs = 'Millions of Songs.';
-  static const freeOnGramophone = 'Free on Gramophone.';
+  static const freeOn = 'Free on ';
+  static const gramophone = 'Gramophone.';
+  
 
   // Common
   static const loading = 'Loading...';
@@ -27,4 +30,3 @@ abstract final class AppStrings {
   static const next = 'Next';
   static const previous = 'Previous';
 }
-

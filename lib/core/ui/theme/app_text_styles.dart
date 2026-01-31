@@ -2,23 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:gramophone/core/ui/theme/app_colors.dart';
 
 abstract class AppTextStyles {
-  static TextStyle titleBold = TextStyle(
+  static const TextStyle titleLarge = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+  );
+  static const TextStyle titleBold = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
-  static TextStyle titleMedium = TextStyle(
+  static const TextStyle titleMedium = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
-  static TextStyle titleSmall = TextStyle(
+  static const TextStyle titleSmall = TextStyle(
     fontSize: 13.5,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
 
-  static TextStyle textHint = TextStyle(
+  static const TextStyle textHint = TextStyle(
     fontSize: 13,
     color: AppColors.textSecondary,
   );

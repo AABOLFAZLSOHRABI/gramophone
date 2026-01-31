@@ -49,12 +49,12 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  /// File path: assets/images/gramphone_backgrand.jpg
-  AssetGenImage get gramphoneBackgrand =>
-      const AssetGenImage('assets/images/gramphone_backgrand.jpg');
+  /// File path: assets/images/gramophone_background.jpg
+  AssetGenImage get gramophoneBackground =>
+      const AssetGenImage('assets/images/gramophone_background.jpg');
 
   /// List of all assets
-  List<AssetGenImage> get values => [gramphoneBackgrand];
+  List<AssetGenImage> get values => [gramophoneBackground];
 }
 
 class Assets {
