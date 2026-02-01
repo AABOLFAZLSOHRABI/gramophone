@@ -106,7 +106,7 @@ class StartPage extends StatelessWidget {
                       borderColor: AppColors.borderColorWhite,
                       iconPath: Assets.icons.apple,
                     ),
-                    12.h.height,
+                    6.h.height,
                     // Sign In Text Button
                     TextButton(
                       onPressed: () {},
@@ -115,7 +115,7 @@ class StartPage extends StatelessWidget {
                         style: AppTextStyles.titleMedium,
                       ),
                     ),
-                    54.h.height,
+                    10.h.height,
                   ],
                 ),
               ),

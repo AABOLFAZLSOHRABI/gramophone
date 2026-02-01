@@ -1,12 +1,16 @@
 import 'package:go_router/go_router.dart';
 import 'package:gramophone/core/router/route_names.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/email_step_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/email_verification_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/password_step_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/preferences/favorite_artists_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/preferences/favorite_podcasts_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/signup/profile_info_step_page.dart';
-import 'package:gramophone/features/auth/presentation/pages/start_page.dart';
+import 'package:gramophone/features/auth/pages/signup/email_step_page.dart';
+import 'package:gramophone/features/auth/pages/signup/email_verification_page.dart';
+import 'package:gramophone/features/auth/pages/signup/password_step_page.dart';
+import 'package:gramophone/features/auth/pages/signup/preferences/favorite_artists_page.dart';
+import 'package:gramophone/features/auth/pages/signup/preferences/favorite_podcasts_page.dart';
+import 'package:gramophone/features/auth/pages/signup/profile_info_step_page.dart';
+import 'package:gramophone/features/auth/pages/start_page.dart';
+import 'package:gramophone/features/main/pages/main_shell_page.dart';
+import 'package:gramophone/features/main/pages/tabs/home_tab_page.dart';
+import 'package:gramophone/features/main/pages/tabs/library_tab_page.dart';
+import 'package:gramophone/features/main/pages/tabs/search_tab_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -41,6 +45,39 @@ class AppRouter {
       GoRoute(
         path: RouteNames.favoritePodcastsPage,
         builder: (context, state) => const FavoritePodcastsPage(),
+      ),
+
+      /// main
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainShellPage(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.homeTabPage,
+                builder: (context, state) => const HomeTabPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.searchTabPage,
+                builder: (context, state) => const SearchTabPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.libraryTabPage,
+                builder: (context, state) => const LibraryTabPage(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );

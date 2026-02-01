@@ -66,8 +66,7 @@ class FavoritePodcastsPage extends StatelessWidget {
             // When the user selects three interests, the next button is activated
             AppButton(
               text: AppStrings.next,
-              onPressed: () =>
-                  context.push(RouteNames.emailVerificationPage),
+              onPressed: () => context.go(RouteNames.homeTabPage),
             ),
           ],
         ),

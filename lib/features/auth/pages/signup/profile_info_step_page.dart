@@ -47,12 +47,12 @@ class ProfileInfoStepPage extends StatelessWidget {
                     Checkbox(value: false, onChanged: (value) {}),
                   ],
                 ),
-                AppButton(
-                  text: AppStrings.createAnAccount,
-                  onPressed: () => context.push(RouteNames.favoriteArtistsPage),
-                ), // TODO = By pressing the button, a pop-up will open and ask the user if the pass is correct. If they say yes, they will go to the next page.
               ],
             ),
+            AppButton(
+              text: AppStrings.createAnAccount,
+              onPressed: () => context.push(RouteNames.favoriteArtistsPage),
+            ), // TODO = By pressing the button, a pop-up will open and ask the user if the pass is correct. If they say yes, they will go to the next page.
           ],
         ),
       ),

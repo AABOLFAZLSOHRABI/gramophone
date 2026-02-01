@@ -27,4 +27,13 @@ abstract class AppTextStyles {
     fontSize: 13,
     color: AppColors.textSecondary,
   );
+  // Bottom Navigation
+  static const TextStyle btnNavActive = TextStyle(
+    fontSize: 13,
+    color: AppColors.btmNavActiveItem,
+  );
+  static const TextStyle btnNavInactive = TextStyle(
+    fontSize: 13,
+    color: AppColors.btmNavInActiveItem,
+  );
 }

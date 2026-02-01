@@ -8,4 +8,10 @@ class RouteNames {
   // preferences
   static const favoriteArtistsPage = '/FavoriteArtistsPage';
   static const favoritePodcastsPage = '/FavoritePodcastsPage';
+
+  // main
+  static const mainPage = '/MainPage';
+  static const homeTabPage = '/HomeTabPage';
+  static const searchTabPage = '/SearchTabPage';
+  static const libraryTabPage = '/LibraryTabPage';
 }

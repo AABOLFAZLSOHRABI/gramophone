@@ -15,6 +15,9 @@ abstract class AppDimens {
   static double get titleSmall => 13.5.sp;
   static double get textHint => 13.sp;
 
+  // Spacing
+  static double get navigationAppBarHight => 89.h;
+
   // Player
   // static double get playerHeight => 72.h;
 }

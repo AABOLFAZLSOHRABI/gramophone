@@ -53,6 +53,17 @@ abstract final class AppStrings {
   static const podcastName = 'Podcast Name';
   static const done = 'Done';
 
+  // Main Tabs
+  static const home = 'Home';
+  static const search = 'Search';
+  static const library = 'Library';
+
+  // home tab
+  static const recentlyPlayed = 'Recently played';
+  static const your2026InReview = 'Your 2026 in review';
+  static const onThisDevice = 'On this device';
+  static const editorsPicks = 'Editor’s picks';
+  static const nameMusic= 'Name music';
   // Common
   static const loading = 'Loading...';
   static const retry = 'Retry';

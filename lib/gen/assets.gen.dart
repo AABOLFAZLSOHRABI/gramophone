@@ -30,6 +30,9 @@ class $AssetsFontsGen {
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
+  /// File path: assets/icons/alert.svg
+  String get alert => 'assets/icons/alert.svg';
+
   /// File path: assets/icons/apple.svg
   String get apple => 'assets/icons/apple.svg';
 
@@ -42,11 +45,46 @@ class $AssetsIconsGen {
   /// File path: assets/icons/google.svg
   String get google => 'assets/icons/google.svg';
 
+  /// File path: assets/icons/home_filled.svg
+  String get homeFilled => 'assets/icons/home_filled.svg';
+
+  /// File path: assets/icons/library.svg
+  String get library => 'assets/icons/library.svg';
+
+  /// File path: assets/icons/llibrary_filled.svg
+  String get llibraryFilled => 'assets/icons/llibrary_filled.svg';
+
   /// File path: assets/icons/logo.svg
   String get logo => 'assets/icons/logo.svg';
 
+  /// File path: assets/icons/orientation_lock.svg
+  String get orientationLock => 'assets/icons/orientation_lock.svg';
+
+  /// File path: assets/icons/search.svg
+  String get search => 'assets/icons/search.svg';
+
+  /// File path: assets/icons/search_filled.svg
+  String get searchFilled => 'assets/icons/search_filled.svg';
+
+  /// File path: assets/icons/settings.svg
+  String get settings => 'assets/icons/settings.svg';
+
   /// List of all assets
-  List<String> get values => [apple, chevronLeft, facebook, google, logo];
+  List<String> get values => [
+    alert,
+    apple,
+    chevronLeft,
+    facebook,
+    google,
+    homeFilled,
+    library,
+    llibraryFilled,
+    logo,
+    orientationLock,
+    search,
+    searchFilled,
+    settings,
+  ];
 }
 
 class $AssetsImagesGen {
