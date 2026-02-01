@@ -33,6 +33,9 @@ class $AssetsIconsGen {
   /// File path: assets/icons/apple.svg
   String get apple => 'assets/icons/apple.svg';
 
+  /// File path: assets/icons/chevron_left.svg
+  String get chevronLeft => 'assets/icons/chevron_left.svg';
+
   /// File path: assets/icons/facebook.svg
   String get facebook => 'assets/icons/facebook.svg';
 
@@ -43,7 +46,7 @@ class $AssetsIconsGen {
   String get logo => 'assets/icons/logo.svg';
 
   /// List of all assets
-  List<String> get values => [apple, facebook, google, logo];
+  List<String> get values => [apple, chevronLeft, facebook, google, logo];
 }
 
 class $AssetsImagesGen {

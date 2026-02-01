@@ -1,0 +1,48 @@
+Folder PATH listing
+Volume serial number is E234-C9D7
+C:.
+³   main.dart
+³   tree.txt
+³   
+ÃÄÄÄcore
+³   ÃÄÄÄrouter
+³   ³       app_router.dart
+³   ³       screen_names.dart
+³   ³       
+³   ÃÄÄÄui
+³   ³   ÃÄÄÄl10n
+³   ³   ³       app_strings.dart
+³   ³   ³       
+³   ³   ÃÄÄÄtheme
+³   ³   ³       app_colors.dart
+³   ³   ³       app_text_styles.dart
+³   ³   ³       app_theme.dart
+³   ³   ³       dimens.dart
+³   ³   ³       
+³   ³   ÀÄÄÄwidgets
+³   ³           app_button.dart
+³   ³           
+³   ÀÄÄÄutils
+³       ÀÄÄÄextensions
+³               size_box_extensions.dart
+³               
+ÃÄÄÄdata
+ÃÄÄÄdomain
+ÃÄÄÄfeatures
+³   ÀÄÄÄauth
+³       ³   start_screen.dart
+³       ³   
+³       ÀÄÄÄsign up
+³           ³   email_step_screen.dart
+³           ³   email_verification_screen.dart
+³           ³   password_step_screen.dart
+³           ³   profile_info_step_screen.dart
+³           ³   
+³           ÀÄÄÄpreferences
+³                   favorite_artists_screen.dart
+³                   favorite_podcasts_screen.dart
+³                   
+ÀÄÄÄgen
+        assets.gen.dart
+        fonts.gen.dart
+        

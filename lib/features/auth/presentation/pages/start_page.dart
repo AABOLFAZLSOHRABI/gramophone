@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
 import 'package:gramophone/core/ui/theme/app_colors.dart';
 import 'package:gramophone/core/ui/theme/app_text_styles.dart';
-import 'package:gramophone/core/ui/theme/dimens.dart';
+import 'package:gramophone/core/ui/foundations/app_dimens.dart';
 import 'package:gramophone/core/ui/widgets/app_button.dart';
 import 'package:gramophone/core/utils/extensions/size_box_extensions.dart';
 import 'package:gramophone/gen/assets.gen.dart';
 
-class StartScreen extends StatelessWidget {
-  const StartScreen({super.key});
+class StartPage extends StatelessWidget {
+  const StartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +66,8 @@ class StartScreen extends StatelessWidget {
                     30.h.height,
                     // Sign Up and Continue with Google Buttons
                     AppButton(
-                      onPressed: () {},
+                      onPressed: () =>
+                          context.push(RouteNames.emailStepPage),
                       text: AppStrings.signUpFree,
                       backgroundColor: AppColors.primary,
                       borderRadius: AppDimens.radiusButton,

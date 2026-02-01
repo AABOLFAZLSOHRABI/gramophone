@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gramophone/core/router/app_router.dart';
 import 'package:gramophone/core/ui/theme/app_theme.dart';
-import 'package:gramophone/features/auth/start_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,14 +16,13 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
+        return MaterialApp.router(
           title: 'gram',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.dark(),
-          home: StartScreen(),
+          routerConfig: AppRouter.router,
         );
       },
     );
   }
 }
-// TODO: start start_screen as home
