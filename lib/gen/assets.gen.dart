@@ -94,8 +94,11 @@ class $AssetsImagesGen {
   AssetGenImage get gramophoneBackground =>
       const AssetGenImage('assets/images/gramophone_background.jpg');
 
+  /// File path: assets/images/logoApp.jpg
+  AssetGenImage get logoApp => const AssetGenImage('assets/images/logoApp.jpg');
+
   /// List of all assets
-  List<AssetGenImage> get values => [gramophoneBackground];
+  List<AssetGenImage> get values => [gramophoneBackground, logoApp];
 }
 
 class Assets {

@@ -64,6 +64,7 @@ abstract final class AppStrings {
   static const onThisDevice = 'On this device';
   static const editorsPicks = 'Editor’s picks';
   static const nameMusic= 'Name music';
+  static const gramophoneWrapped = '#Gramophone_Wrapped';
   // Common
   static const loading = 'Loading...';
   static const retry = 'Retry';
