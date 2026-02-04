@@ -12,6 +12,11 @@ abstract class AppTextStyles {
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
+    static const TextStyle titleBoldSmall = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+  );
   static const TextStyle titleMedium = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.bold,
@@ -19,7 +24,7 @@ abstract class AppTextStyles {
   );
   static const TextStyle titleSmall = TextStyle(
     fontSize: 13.5,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.normal,
     color: AppColors.textPrimary,
   );
 

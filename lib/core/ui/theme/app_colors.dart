@@ -13,4 +13,7 @@ abstract class AppColors {
   static const btmNavColor = Color(0xFF181818);
   static const btmNavActiveItem = Color(0xFFE5E5E5);
   static const btmNavInActiveItem = Color(0xFF777777);
+
+  // input field
+    static const inputFillColor = Color(0xFF777777);
 }
