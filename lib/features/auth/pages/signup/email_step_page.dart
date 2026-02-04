@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
-import 'package:gramophone/core/router/route_names.dart';
+import 'package:gramophone/core/utils/extensions/size_box_extensions.dart';
+import 'package:gramophone/core/ui/widgets/auth_step_widgets.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
 import 'package:gramophone/core/ui/theme/app_colors.dart';
 import 'package:gramophone/core/ui/theme/app_text_styles.dart';
-import 'package:gramophone/core/ui/widgets/app_button.dart';
-import 'package:gramophone/core/utils/extensions/size_box_extensions.dart';
 import 'package:gramophone/gen/assets.gen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gramophone/core/router/route_names.dart';
 
 class EmailStepPage extends StatelessWidget {
   const EmailStepPage({super.key});
@@ -18,52 +17,46 @@ class EmailStepPage extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          actions: [
-            Row(
-              children: [
-                Text(AppStrings.createAccount),
-                SvgPicture.asset(Assets.icons.chevronLeft),
-              ],
-            ),
-          ],
+          automaticallyImplyLeading: false,
+          title: AppBarTextIconAction(
+            text: AppStrings.createAccount,
+            iconPath: Assets.icons.chevronLeft,
+            onIconPressed: () => context.pop(),
+            textStyle: AppTextStyles.titleMedium,
+            spacing: 110.w,
+          ),
         ),
         body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
+            PaddedText(
+              text: AppStrings.whatsYourEmail,
+              style: AppTextStyles.titleLarge,
+              textAlign: TextAlign.end,
               padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 30.w),
-              child: Text(
-                AppStrings.whatsYourEmail,
-                style: AppTextStyles.titleLarge,
-                textAlign: TextAlign.end,
-              ),
             ),
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 30.w),
-              child: TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.btmNavInActiveItem,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5.r),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              child: FilledRoundedTextField(
+                fillColor: AppColors.btmNavInActiveItem,
+                borderRadius: 5.r,
               ),
             ),
-            Padding(
+            PaddedText(
+              text: AppStrings.youWillNeedToConfirmEmailLater,
+              style: AppTextStyles.titleSmall,
+              textAlign: TextAlign.end,
               padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 30.w),
-              child: Text(
-                AppStrings.youWillNeedToConfirmEmailLater,
-                style: AppTextStyles.titleSmall,
-                textAlign: TextAlign.end,
-              ),
             ),
             45.h.height,
-            AppButton(
+            CenteredButton(
               text: AppStrings.next,
-              onPressed: () => context.push(RouteNames.emailVerificationPage),
-            ), // TODO = By pressing the button, a pop-up will open and ask the user if the email is correct. If they say yes, they will go to the next page.
+              width: 82.w,
+              onPressed: () => context.push(RouteNames.passwordStepPage),
+            ),
+            // TODO = By pressing the button, a pop-up will open and ask the user
+            // if the email is correct. If they say yes, they will go to the next
+            // page.
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/features/auth/pages/signup/email_step_page.dart';
-import 'package:gramophone/features/auth/pages/signup/email_verification_page.dart';
 import 'package:gramophone/features/auth/pages/signup/password_step_page.dart';
 import 'package:gramophone/features/auth/pages/signup/preferences/favorite_artists_page.dart';
 import 'package:gramophone/features/auth/pages/signup/preferences/favorite_podcasts_page.dart';
@@ -24,10 +23,6 @@ class AppRouter {
       GoRoute(
         path: RouteNames.emailStepPage,
         builder: (context, state) => const EmailStepPage(),
-      ),
-      GoRoute(
-        path: RouteNames.emailVerificationPage,
-        builder: (context, state) => const EmailVerificationPage(),
       ),
       GoRoute(
         path: RouteNames.passwordStepPage,

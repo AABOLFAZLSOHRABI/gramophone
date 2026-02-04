@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
-import 'package:gramophone/core/ui/widgets/app_button.dart';
+import 'package:gramophone/core/ui/theme/app_colors.dart';
+import 'package:gramophone/core/ui/theme/app_text_styles.dart';
+import 'package:gramophone/core/ui/widgets/auth_step_widgets.dart';
+import 'package:gramophone/core/utils/extensions/size_box_extensions.dart';
 import 'package:gramophone/gen/assets.gen.dart';
 
 class PasswordStepPage extends StatelessWidget {
@@ -14,24 +17,44 @@ class PasswordStepPage extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          actions: [
-            Row(
-              children: [
-                Text(AppStrings.createAccount),
-                SvgPicture.asset(Assets.icons.chevronLeft),
-              ],
-            ),
-          ],
+          automaticallyImplyLeading: false,
+          title: AppBarTextIconAction(
+            text: AppStrings.createAccount,
+            iconPath: Assets.icons.chevronLeft,
+            onIconPressed: () => context.pop(),
+            textStyle: AppTextStyles.titleMedium,
+            spacing: 110.w,
+          ),
         ),
         body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppStrings.createPassword),
-            TextField(),
-            Text(AppStrings.useAtLeast8Characters),
-            AppButton(
+            PaddedText(
+              text: AppStrings.createPassword,
+              style: AppTextStyles.titleLarge,
+              textAlign: TextAlign.end,
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 30.w),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30.w),
+              child: FilledRoundedTextField(
+                fillColor: AppColors.btmNavInActiveItem,
+                borderRadius: 5.r,
+              ),
+            ),
+            PaddedText(
+              text: AppStrings.useAtLeast8Characters,
+              style: AppTextStyles.titleSmall,
+              textAlign: TextAlign.end,
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 30.w),
+            ),
+            43.h.height,
+            CenteredButton(
               text: AppStrings.next,
+              width: 82.w,
               onPressed: () => context.push(RouteNames.profileInfoStepPage),
-            ), // TODO = By pressing the button, a pop-up will open and ask the user if the pass is correct. If they say yes, they will go to the next page.
+            ),
+            // TODO = By pressing the button, a pop-up will open and ask the user if the pass is correct. If they say yes, they will go to the next page.
           ],
         ),
       ),
