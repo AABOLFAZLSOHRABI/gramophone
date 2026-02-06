@@ -114,7 +114,7 @@ packages:
     source: hosted
     version: "4.1.1"
   build_runner:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: build_runner
       sha256: b4d854962a32fd9f8efc0b76f98214790b833af8b2e9b2df6bfc927c0415a072
@@ -393,7 +393,7 @@ packages:
     source: sdk
     version: "0.0.0"
   freezed:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: freezed
       sha256: "03dd9b7423ff0e31b7e01b2204593e5e1ac5ee553b6ea9d8184dff4a26b9fb07"
@@ -513,7 +513,7 @@ packages:
     source: hosted
     version: "2.7.1+4"
   injectable_generator:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: injectable_generator
       sha256: "4a3f3010217012b44d55b73fd7a910017f2dfe5157d6b8561a929c2409e08c4e"

@@ -68,6 +68,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                 textAlign: TextAlign.start,
                 padding: EdgeInsets.symmetric(horizontal: 30.w),
               ),
+              20.h.height,
               PaddedText(
                 text: AppStrings.termsOfUse,
                 style: AppTextStyles.titleSmall,
@@ -81,6 +82,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                 textAlign: TextAlign.start,
                 padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 30.w),
               ),
+              20.h.height,
               PaddedText(
                 text: AppStrings.privacyPolicy,
                 style: AppTextStyles.titleSmall,
@@ -88,6 +90,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                 color: AppColors.primary,
                 padding: EdgeInsets.symmetric(horizontal: 30.w),
               ),
+              20.h.height,
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 30.w),
                 child: Row(
@@ -102,6 +105,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                             style: AppTextStyles.titleSmall,
                             textAlign: TextAlign.start,
                           ),
+                          20.h.height,
                           10.h.height,
                           Text(
                             AppStrings.shareRegistrationData,
@@ -132,6 +136,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                           activeColor: AppColors.primary,
                           checkColor: AppColors.textDark,
                         ),
+                        20.h.height,
                         Checkbox(
                           value: _shareRegistrationData,
                           onChanged: (value) {
@@ -156,7 +161,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                   ],
                 ),
               ),
-              330.h.height,
+              270.h.height,
               CenteredButton(
                 text: AppStrings.createAnAccount,
                 width: 180.w,

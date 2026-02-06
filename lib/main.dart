@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gramophone/core/di/service_locator.dart';
 import 'package:gramophone/core/router/app_router.dart';
 import 'package:gramophone/core/ui/theme/app_theme.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await setupServiceLocator();
   if (Platform.isWindows) {
     await windowManager.ensureInitialized();
     const windowSize = Size(428, 926);
