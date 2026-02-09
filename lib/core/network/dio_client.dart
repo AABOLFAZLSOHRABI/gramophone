@@ -14,6 +14,17 @@ class DioClient {
       ),
     );
 
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.queryParameters.putIfAbsent(
+            'api_key',
+            () => Endpoints.audiusApiKey,
+          );
+          handler.next(options);
+        },
+      ),
+    );
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: false));
   }
 

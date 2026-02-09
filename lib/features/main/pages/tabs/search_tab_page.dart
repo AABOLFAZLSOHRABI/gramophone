@@ -7,7 +7,6 @@ class SearchTabPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ds = sl<AudiusRemoteDataSource>();
     return SafeArea(
       child: Scaffold(
         body: Center(
