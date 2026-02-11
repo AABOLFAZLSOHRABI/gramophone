@@ -19,7 +19,10 @@ class FavoritePodcastsPage extends StatelessWidget {
           actions: [
             Row(
               children: [
-                Text(AppStrings.nowChooseSomePodcasts),
+                Text(
+                  AppStrings.nowChooseSomePodcasts,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SvgPicture.asset(Assets.icons.chevronLeft),
               ],
             ),
@@ -40,14 +43,15 @@ class FavoritePodcastsPage extends StatelessWidget {
                   crossAxisCount: 3,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.95,
                 ),
                 itemCount: 15,
                 itemBuilder: (context, index) {
                   return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const CircleAvatar(
-                        radius: 10,
+                        radius: 34,
                         backgroundColor: Colors.pink,
                       ),
                       8.h.height,

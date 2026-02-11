@@ -19,7 +19,10 @@ class FavoriteArtistsPage extends StatelessWidget {
           actions: [
             Row(
               children: [
-                Text(AppStrings.favoriteArtistsSubtitle),
+                Text(
+                  AppStrings.favoriteArtistsSubtitle,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SvgPicture.asset(Assets.icons.chevronLeft),
               ],
             ),
@@ -40,24 +43,35 @@ class FavoriteArtistsPage extends StatelessWidget {
                   crossAxisCount: 3,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.95,
                 ),
                 itemCount: 15,
                 itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 100,
-                        backgroundColor: Colors.grey,
-                      ),
-                      8.h.height,
-                      Text(
-                        AppStrings.artistName,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final avatarDiameter = constraints.maxWidth.clamp(
+                        64.0,
+                        96.0,
+                      );
+                      final avatarRadius = avatarDiameter / 2;
+
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: avatarRadius,
+                            backgroundColor: Colors.grey,
+                          ),
+                          8.h.height,
+                          Text(
+                            AppStrings.artistName,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),

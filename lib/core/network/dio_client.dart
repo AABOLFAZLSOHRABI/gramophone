@@ -3,6 +3,7 @@ import 'endpoints.dart';
 
 class DioClient {
   late final Dio dio;
+  final _audiusHost = Uri.parse(Endpoints.audiusBaseUrl).host;
 
   DioClient() {
     dio = Dio(
@@ -17,10 +18,12 @@ class DioClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          options.queryParameters.putIfAbsent(
-            'api_key',
-            () => Endpoints.audiusApiKey,
-          );
+          if (options.uri.host == _audiusHost) {
+            options.queryParameters.putIfAbsent(
+              'api_key',
+              () => Endpoints.audiusApiKey,
+            );
+          }
           handler.next(options);
         },
       ),
@@ -33,5 +36,13 @@ class DioClient {
     Map<String, dynamic>? query,
   }) {
     return dio.get(path, queryParameters: query);
+  }
+
+  Future<Response<dynamic>> download(
+    String url,
+    String savePath, {
+    Map<String, dynamic>? query,
+  }) {
+    return dio.download(url, savePath, queryParameters: query);
   }
 }
