@@ -16,24 +16,25 @@ class FavoriteArtistsPage extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          actions: [
-            Row(
-              children: [
-                Text(
-                  AppStrings.favoriteArtistsSubtitle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SvgPicture.asset(Assets.icons.chevronLeft),
-              ],
-            ),
-          ],
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: SvgPicture.asset(Assets.icons.chevronLeft),
+          ),
+          title: Text(
+            AppStrings.favoriteArtistsSubtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         body: Column(
           children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: AppStrings.searchArtists,
-                prefixIcon: Icon(Icons.search),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                decoration: const InputDecoration(
+                  hintText: AppStrings.searchArtists,
+                  prefixIcon: Icon(Icons.search),
+                ),
               ),
             ),
             Expanded(
@@ -43,31 +44,32 @@ class FavoriteArtistsPage extends StatelessWidget {
                   crossAxisCount: 3,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.95,
+                  childAspectRatio: 0.72,
                 ),
                 itemCount: 15,
                 itemBuilder: (context, index) {
                   return LayoutBuilder(
                     builder: (context, constraints) {
-                      final avatarDiameter = constraints.maxWidth.clamp(
-                        64.0,
-                        96.0,
-                      );
+                      final avatarDiameter =
+                          (constraints.maxWidth * 0.78).clamp(56.0, 84.0);
                       final avatarRadius = avatarDiameter / 2;
 
                       return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           CircleAvatar(
                             radius: avatarRadius,
                             backgroundColor: Colors.grey,
                           ),
                           8.h.height,
-                          Text(
-                            AppStrings.artistName,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          SizedBox(
+                            width: constraints.maxWidth,
+                            child: Text(
+                              AppStrings.artistName,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       );
@@ -78,9 +80,12 @@ class FavoriteArtistsPage extends StatelessWidget {
             ),
 
             // When the user selects three interests, the next button is activated
-            AppButton(
-              text: AppStrings.next,
-              onPressed: () => context.push(RouteNames.favoritePodcastsPage),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: AppButton(
+                text: AppStrings.next,
+                onPressed: () => context.push(RouteNames.favoritePodcastsPage),
+              ),
             ),
           ],
         ),

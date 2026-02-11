@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gramophone/core/di/service_locator.dart';
-import 'package:gramophone/core/result/result.dart';
-import 'package:gramophone/features/main/domain/repositories/main_repository.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gramophone/core/router/route_names.dart';
 
 class SearchTabPage extends StatelessWidget {
   const SearchTabPage({super.key});
@@ -12,24 +11,8 @@ class SearchTabPage extends StatelessWidget {
       child: Scaffold(
         body: Center(
           child: ElevatedButton(
-            onPressed: () async {
-              final stream = sl<MainRepository>().watchTrendingTracks();
-              await for (final result in stream) {
-                switch (result) {
-                  case ResultSuccess():
-                    final tracks = result.data;
-                    if (tracks.isEmpty) {
-                      print('No tracks found');
-                      continue;
-                    }
-                    print(tracks.length);
-                    print(tracks.first.title);
-                    print(tracks.first.artist);
-                    print(tracks.first.imageUrl);
-                  case ResultFailure():
-                    print(result.failure.message);
-                }
-              }
+            onPressed: () {
+              context.push(RouteNames.playerPage);
             },
             child: const Text('Test with GetIt'),
           ),

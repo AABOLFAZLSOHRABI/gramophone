@@ -10,6 +10,7 @@ import 'package:gramophone/features/main/pages/main_shell_page.dart';
 import 'package:gramophone/features/main/pages/tabs/home_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/library_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/search_tab_page.dart';
+import 'package:gramophone/features/player/presentation/pages/now_playing_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -40,6 +41,10 @@ class AppRouter {
       GoRoute(
         path: RouteNames.favoritePodcastsPage,
         builder: (context, state) => const FavoritePodcastsPage(),
+      ),
+      GoRoute(
+        path: RouteNames.playerPage,
+        builder: (context, state) => const NowPlayingScreen(),
       ),
 
       /// main

@@ -14,4 +14,7 @@ class RouteNames {
   static const homeTabPage = '/HomeTabPage';
   static const searchTabPage = '/SearchTabPage';
   static const libraryTabPage = '/LibraryTabPage';
+
+  // player
+  static const playerPage = '/PlayerPage';
 }
