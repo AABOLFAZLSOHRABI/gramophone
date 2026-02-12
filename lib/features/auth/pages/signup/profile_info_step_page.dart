@@ -161,7 +161,7 @@ class _ProfileInfoStepPageState extends State<ProfileInfoStepPage> {
                   ],
                 ),
               ),
-              270.h.height,
+              170.h.height,
               CenteredButton(
                 text: AppStrings.createAnAccount,
                 width: 180.w,

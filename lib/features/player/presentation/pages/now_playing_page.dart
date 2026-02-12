@@ -72,20 +72,24 @@ class NowPlayingScreen extends StatelessWidget {
         final hasTrackImage =
             cachedImageUrl != null && cachedImageUrl.isNotEmpty;
 
+        final metadataDuration =
+            (resolvedTrack?.duration != null && resolvedTrack!.duration! > 0)
+            ? Duration(seconds: resolvedTrack.duration!)
+            : Duration.zero;
         final resolvedTotal = playerState.duration > Duration.zero
             ? playerState.duration
-            : total;
+            : metadataDuration;
+        final hasKnownDuration = resolvedTotal > Duration.zero;
         final resolvedCurrent = playerState.position > Duration.zero
             ? playerState.position
             : current;
-        final currentSeconds = resolvedCurrent.inSeconds.clamp(
-          0,
-          resolvedTotal.inSeconds == 0 ? 0 : resolvedTotal.inSeconds,
-        );
-        final totalSeconds = resolvedTotal.inSeconds == 0
-            ? 1
-            : resolvedTotal.inSeconds;
-        final value = (currentSeconds / totalSeconds).clamp(0.0, 1.0);
+        final currentSeconds = hasKnownDuration
+            ? resolvedCurrent.inSeconds.clamp(0, resolvedTotal.inSeconds)
+            : resolvedCurrent.inSeconds.clamp(0, 0);
+        final totalSeconds = hasKnownDuration ? resolvedTotal.inSeconds : 1;
+        final value = hasKnownDuration
+            ? (currentSeconds / totalSeconds).clamp(0.0, 1.0)
+            : 0.0;
 
         return Scaffold(
           body: Stack(
@@ -279,13 +283,17 @@ class NowPlayingScreen extends StatelessWidget {
                             ),
                             child: Slider(
                               value: value,
-                              onChanged: (newValue) {
-                                final target = Duration(
-                                  seconds: (resolvedTotal.inSeconds * newValue)
-                                      .round(),
-                                );
-                                sl<PlayerBloc>().add(SeekChanged(target));
-                              },
+                              onChanged:
+                                  (hasKnownDuration && playerState.canSeek)
+                                  ? (newValue) {
+                                      final target = Duration(
+                                        seconds:
+                                            (resolvedTotal.inSeconds * newValue)
+                                                .round(),
+                                      );
+                                      sl<PlayerBloc>().add(SeekChanged(target));
+                                    }
+                                  : null,
                             ),
                           ),
                           Padding(
@@ -300,7 +308,9 @@ class NowPlayingScreen extends StatelessWidget {
                                 ),
                                 const Spacer(),
                                 Text(
-                                  '-${_format(resolvedTotal - Duration(seconds: currentSeconds))}',
+                                  hasKnownDuration
+                                      ? '-${_format(resolvedTotal - Duration(seconds: currentSeconds))}'
+                                      : '--:--',
                                   style: AppTextStyles.textHint.copyWith(
                                     color: AppColors.textSecondary,
                                   ),

@@ -15,21 +15,18 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> loadHome() async {
     emit(const HomeLoading());
 
-    final recentlyResult = await _repository.getTrendingTracksFromApi(
-      time: 'allTime',
-      limit: 10,
-      offset: 0,
-    );
-    final editorsResult = await _repository.getTrendingTracksFromApi(
-      time: 'week',
-      limit: 10,
-      offset: 0,
-    );
-    final reviewResult = await _repository.getReviewItemsFromApi(
-      time: 'week',
-      limit: 6,
-      offset: 0,
-    );
+    final results = await Future.wait([
+      _repository.getTrendingTracksFromApi(
+        time: 'allTime',
+        limit: 10,
+        offset: 0,
+      ),
+      _repository.getTrendingTracksFromApi(time: 'week', limit: 10, offset: 0),
+      _repository.getReviewItemsFromApi(time: 'week', limit: 6, offset: 0),
+    ]);
+    final recentlyResult = results[0] as Result<List<Track>>;
+    final editorsResult = results[1] as Result<List<Track>>;
+    final reviewResult = results[2] as Result<List<ReviewItem>>;
 
     final recentlyTracks = <Track>[];
     final editorsTracks = <Track>[];
@@ -59,9 +56,14 @@ class HomeCubit extends Cubit<HomeState> {
         reviewError = reviewResult.failure.message;
     }
 
-    if (recentlyTracks.isEmpty && editorsTracks.isEmpty && reviewItems.isEmpty) {
+    if (recentlyTracks.isEmpty &&
+        editorsTracks.isEmpty &&
+        reviewItems.isEmpty) {
       final fallback =
-          recentlyError ?? editorsError ?? reviewError ?? AppStrings.somethingWentWrong;
+          recentlyError ??
+          editorsError ??
+          reviewError ??
+          AppStrings.somethingWentWrong;
       emit(HomeError(fallback));
       return;
     }

@@ -4,11 +4,16 @@ sealed class PlayerEvent {
   const PlayerEvent();
 }
 
-final class LoadQueueAndTrack extends PlayerEvent {
-  const LoadQueueAndTrack({required this.queue, required this.startIndex});
+final class PlayTrackRequested extends PlayerEvent {
+  const PlayTrackRequested({
+    required this.queue,
+    required this.index,
+    this.autoPlay = true,
+  });
 
   final List<Track> queue;
-  final int startIndex;
+  final int index;
+  final bool autoPlay;
 }
 
 final class TogglePlayPausePressed extends PlayerEvent {

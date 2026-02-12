@@ -248,6 +248,15 @@ class _ReviewSection extends StatelessWidget {
                   imageWidth: 155.w,
                   imageHeight: 155.h,
                   onTap: () {
+                    if (reviewTrack.streamUrl == null ||
+                        reviewTrack.streamUrl!.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(AppStrings.reviewItemNotPlayable),
+                        ),
+                      );
+                      return;
+                    }
                     final queue = items
                         .map(
                           (reviewItem) => Track(
@@ -257,14 +266,28 @@ class _ReviewSection extends StatelessWidget {
                             imageUrl: reviewItem.imageUrl,
                           ),
                         )
+                        .where(
+                          (track) =>
+                              track.streamUrl != null &&
+                              track.streamUrl!.isNotEmpty,
+                        )
                         .toList();
+                    if (queue.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(AppStrings.reviewItemNotPlayable),
+                        ),
+                      );
+                      return;
+                    }
                     final startIndex = queue.indexWhere(
                       (itemTrack) => itemTrack.id == reviewTrack.id,
                     );
                     sl<PlayerBloc>().add(
-                      LoadQueueAndTrack(
+                      PlayTrackRequested(
                         queue: queue,
-                        startIndex: startIndex >= 0 ? startIndex : 0,
+                        index: startIndex >= 0 ? startIndex : 0,
+                        autoPlay: true,
                       ),
                     );
                     context.push(RouteNames.playerPage, extra: reviewTrack);
@@ -391,7 +414,11 @@ class _TrackHorizontalList extends StatelessWidget {
               onTap: enableTap
                   ? () {
                       sl<PlayerBloc>().add(
-                        LoadQueueAndTrack(queue: tracks, startIndex: index),
+                        PlayTrackRequested(
+                          queue: tracks,
+                          index: index,
+                          autoPlay: true,
+                        ),
                       );
                       context.push(RouteNames.playerPage, extra: track);
                     }

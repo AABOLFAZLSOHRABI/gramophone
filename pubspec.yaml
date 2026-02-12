@@ -33,6 +33,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   flutter_bloc: ^9.1.1
+  bloc_concurrency: ^0.3.0
   dio: ^5.9.1
   just_audio: ^0.10.5
   just_audio_windows: ^0.2.2

@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:gramophone/core/di/service_locator.dart';
 import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/features/auth/pages/signup/email_step_page.dart';
 import 'package:gramophone/features/auth/pages/signup/password_step_page.dart';
@@ -13,8 +12,6 @@ import 'package:gramophone/features/main/pages/search_input_page.dart';
 import 'package:gramophone/features/main/pages/tabs/home_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/library_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/search_tab_page.dart';
-import 'package:gramophone/features/player/presentation/bloc/player_bloc.dart';
-import 'package:gramophone/features/player/presentation/bloc/player_event.dart';
 import 'package:gramophone/features/player/presentation/pages/now_playing_page.dart';
 
 class AppRouter {
@@ -52,12 +49,6 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra;
           final track = extra is Track ? extra : null;
-          final currentTrack = sl<PlayerBloc>().state.currentTrack;
-          if (track != null && currentTrack?.id != track.id) {
-            sl<PlayerBloc>().add(
-              LoadQueueAndTrack(queue: [track], startIndex: 0),
-            );
-          }
           return NowPlayingScreen(track: track);
         },
       ),

@@ -65,6 +65,16 @@ abstract final class AppStrings {
   static const searchInputPlaceholder = 'What do you want to listen to?';
   static const searchComingSoon =
       'Search results and suggestions will appear here.';
+  static const libraryQuickAccess = 'Quick access';
+  static const libraryAlbums = 'Albums';
+  static const libraryLikedSongs = 'Liked Songs';
+  static const libraryDownloaded = 'Downloaded';
+  static const libraryPlaylists = 'Playlists';
+  static const libraryRecentlyAdded = 'Recently added';
+  static const libraryYourAlbums = 'Your albums';
+  static const librarySeeAll = 'See all';
+  static const libraryDownloadsEmptyHint =
+      'Downloaded tracks will appear here after you save songs for offline listening.';
   static const genrePop = 'Pop';
   static const genreIndie = 'Indie';
   static const categoryNewsPolitics = 'News &\nPolitics';
@@ -110,4 +120,7 @@ abstract final class AppStrings {
   static const audioBackendUnavailable =
       'Audio backend is not available on this build. Please run a full restart.';
   static const queueIsEmpty = 'Queue is empty.';
+  static const tryAgainWithFullRestart =
+      'Try a full restart: flutter clean && flutter pub get && flutter run -d windows';
+  static const reviewItemNotPlayable = 'This review item is not playable yet.';
 }
