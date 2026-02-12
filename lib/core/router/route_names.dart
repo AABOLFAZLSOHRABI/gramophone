@@ -13,6 +13,8 @@ class RouteNames {
   static const mainPage = '/MainPage';
   static const homeTabPage = '/HomeTabPage';
   static const searchTabPage = '/SearchTabPage';
+  static const searchInputPage = 'SearchInputPage';
+  static const searchInputPageLocation = '$searchTabPage/$searchInputPage';
   static const libraryTabPage = '/LibraryTabPage';
 
   // player

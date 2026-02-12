@@ -8,6 +8,7 @@ import 'package:gramophone/core/router/app_router.dart';
 import 'package:gramophone/core/ui/theme/app_theme.dart';
 import 'package:gramophone/features/main/data/datasources/main_local_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/offline_download_data_source.dart';
+import 'package:gramophone/features/player/data/datasources/player_local_data_source.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
@@ -15,6 +16,8 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox<dynamic>(MainLocalDataSource.trendingCacheBoxName);
   await Hive.openBox<dynamic>(OfflineDownloadDataSource.offlineTracksBoxName);
+  await Hive.openBox<dynamic>(PlayerLocalDataSource.likesBoxName);
+  await Hive.openBox<dynamic>(PlayerLocalDataSource.playlistsBoxName);
   await setupServiceLocator();
   if (Platform.isWindows) {
     await windowManager.ensureInitialized();

@@ -35,6 +35,7 @@ dependencies:
   flutter_bloc: ^9.1.1
   dio: ^5.9.1
   just_audio: ^0.10.5
+  just_audio_windows: ^0.2.2
   get_it: ^9.2.0
   injectable: ^2.7.1+4
   cached_network_image: ^3.4.1
@@ -62,6 +63,10 @@ dev_dependencies:
   freezed: ^3.2.4
   json_serializable: ^6.12.0
   injectable_generator: ^2.11.1
+
+dependency_overrides:
+  just_audio_windows:
+    path: third_party/just_audio_windows_patched
 
 flutter:
 

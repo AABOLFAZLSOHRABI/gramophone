@@ -1,17 +1,21 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gramophone/core/di/service_locator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
 import 'package:gramophone/core/ui/theme/app_colors.dart';
 import 'package:gramophone/core/ui/theme/app_text_styles.dart';
+import 'package:gramophone/core/ui/widgets/media_item_card.dart';
 import 'package:gramophone/core/utils/extensions/size_box_extensions.dart';
 import 'package:gramophone/domain/entities/review_item.dart';
 import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/main/presentation/cubit/home_cubit.dart';
 import 'package:gramophone/features/main/presentation/cubit/home_state.dart';
+import 'package:gramophone/features/player/presentation/bloc/player_bloc.dart';
+import 'package:gramophone/features/player/presentation/bloc/player_event.dart';
 import 'package:gramophone/gen/assets.gen.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -229,36 +233,42 @@ class _ReviewSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 10.w),
             itemBuilder: (_, index) {
               final item = items[index];
+              final reviewTrack = Track(
+                id: item.id,
+                title: item.title,
+                artist: item.subtitle,
+                imageUrl: item.imageUrl,
+              );
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 7.w),
-                child: SizedBox(
-                  width: 155.w,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _TrackImage(
-                        imageUrl: item.imageUrl,
-                        width: 155.w,
-                        height: 155.h,
+                child: MediaItemCard(
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  imageUrl: item.imageUrl,
+                  imageWidth: 155.w,
+                  imageHeight: 155.h,
+                  onTap: () {
+                    final queue = items
+                        .map(
+                          (reviewItem) => Track(
+                            id: reviewItem.id,
+                            title: reviewItem.title,
+                            artist: reviewItem.subtitle,
+                            imageUrl: reviewItem.imageUrl,
+                          ),
+                        )
+                        .toList();
+                    final startIndex = queue.indexWhere(
+                      (itemTrack) => itemTrack.id == reviewTrack.id,
+                    );
+                    sl<PlayerBloc>().add(
+                      LoadQueueAndTrack(
+                        queue: queue,
+                        startIndex: startIndex >= 0 ? startIndex : 0,
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 5.h),
-                        child: Text(
-                          item.title,
-                          style: AppTextStyles.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        item.subtitle,
-                        style: AppTextStyles.textHint,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                    );
+                    context.push(RouteNames.playerPage, extra: reviewTrack);
+                  },
                 ),
               );
             },
@@ -350,12 +360,14 @@ class _TrackHorizontalList extends StatelessWidget {
     required this.imageHeight,
     required this.imageWidth,
     required this.listHeight,
+    this.enableTap = true,
   });
 
   final List<Track> tracks;
   final double imageHeight;
   final double imageWidth;
   final double listHeight;
+  final bool enableTap;
 
   @override
   Widget build(BuildContext context) {
@@ -370,88 +382,23 @@ class _TrackHorizontalList extends StatelessWidget {
           final track = tracks[index];
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 7.w),
-            child: SizedBox(
-              width: imageWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _TrackImage(
-                    imageUrl: track.imageUrl,
-                    width: imageWidth,
-                    height: imageHeight,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 5.h),
-                    child: Text(
-                      track.title,
-                      style: AppTextStyles.titleSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Text(
-                    track.artist,
-                    style: AppTextStyles.textHint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+            child: MediaItemCard(
+              title: track.title,
+              subtitle: track.artist,
+              imageUrl: track.imageUrl,
+              imageWidth: imageWidth,
+              imageHeight: imageHeight,
+              onTap: enableTap
+                  ? () {
+                      sl<PlayerBloc>().add(
+                        LoadQueueAndTrack(queue: tracks, startIndex: index),
+                      );
+                      context.push(RouteNames.playerPage, extra: track);
+                    }
+                  : null,
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _TrackImage extends StatelessWidget {
-  const _TrackImage({
-    required this.imageUrl,
-    required this.width,
-    required this.height,
-  });
-
-  final String? imageUrl;
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = imageUrl;
-    if (url == null || url.isEmpty) {
-      return Image.asset(
-        Assets.images.logoApp.path,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-      );
-    }
-
-    return CachedNetworkImage(
-      imageUrl: url,
-      width: width,
-      height: height,
-      fit: BoxFit.cover,
-      placeholder: (_, __) => Container(
-        width: width,
-        height: height,
-        color: AppColors.btmNavColor,
-        child: Skeletonizer(
-          enabled: true,
-          child: Container(
-            width: width,
-            height: height,
-            color: AppColors.textSecondary.withValues(alpha: 0.12),
-          ),
-        ),
-      ),
-      errorWidget: (_, __, ___) => Image.asset(
-        Assets.images.logoApp.path,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
       ),
     );
   }
@@ -485,6 +432,7 @@ class _HomeSkeletonView extends StatelessWidget {
               imageHeight: 105.h,
               imageWidth: 105.w,
               listHeight: 154.h,
+              enableTap: false,
             ),
             _ReviewPlaceholder(),
             Padding(
@@ -507,6 +455,7 @@ class _HomeSkeletonView extends StatelessWidget {
               imageHeight: 155.h,
               imageWidth: 155.w,
               listHeight: 208.h,
+              enableTap: false,
             ),
           ],
         ),

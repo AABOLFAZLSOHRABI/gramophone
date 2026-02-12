@@ -77,6 +77,22 @@ class OfflineDownloadDataSource {
     return true;
   }
 
+  Future<String?> getDownloadedAudioPath(String trackId) async {
+    final raw = _box.get(trackId);
+    if (raw is! Map) {
+      return null;
+    }
+
+    final record = DownloadedTrackRecord.fromMap(raw);
+    final audioFile = File(record.audioFilePath);
+    if (!await audioFile.exists()) {
+      await _box.delete(trackId);
+      return null;
+    }
+
+    return record.audioFilePath;
+  }
+
   Future<void> removeDownloadedTrack(String trackId) async {
     final raw = _box.get(trackId);
     if (raw is! Map) {

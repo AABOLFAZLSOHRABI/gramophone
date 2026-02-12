@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:gramophone/core/di/service_locator.dart';
 import 'package:gramophone/core/router/route_names.dart';
 import 'package:gramophone/features/auth/pages/signup/email_step_page.dart';
 import 'package:gramophone/features/auth/pages/signup/password_step_page.dart';
@@ -6,10 +7,14 @@ import 'package:gramophone/features/auth/pages/signup/preferences/favorite_artis
 import 'package:gramophone/features/auth/pages/signup/preferences/favorite_podcasts_page.dart';
 import 'package:gramophone/features/auth/pages/signup/profile_info_step_page.dart';
 import 'package:gramophone/features/auth/pages/start_page.dart';
+import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/main/pages/main_shell_page.dart';
+import 'package:gramophone/features/main/pages/search_input_page.dart';
 import 'package:gramophone/features/main/pages/tabs/home_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/library_tab_page.dart';
 import 'package:gramophone/features/main/pages/tabs/search_tab_page.dart';
+import 'package:gramophone/features/player/presentation/bloc/player_bloc.dart';
+import 'package:gramophone/features/player/presentation/bloc/player_event.dart';
 import 'package:gramophone/features/player/presentation/pages/now_playing_page.dart';
 
 class AppRouter {
@@ -44,7 +49,17 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.playerPage,
-        builder: (context, state) => const NowPlayingScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          final track = extra is Track ? extra : null;
+          final currentTrack = sl<PlayerBloc>().state.currentTrack;
+          if (track != null && currentTrack?.id != track.id) {
+            sl<PlayerBloc>().add(
+              LoadQueueAndTrack(queue: [track], startIndex: 0),
+            );
+          }
+          return NowPlayingScreen(track: track);
+        },
       ),
 
       /// main
@@ -66,6 +81,12 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.searchTabPage,
                 builder: (context, state) => const SearchTabPage(),
+                routes: [
+                  GoRoute(
+                    path: RouteNames.searchInputPage,
+                    builder: (context, state) => const SearchInputPage(),
+                  ),
+                ],
               ),
             ],
           ),

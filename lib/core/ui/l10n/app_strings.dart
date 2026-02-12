@@ -47,7 +47,7 @@ abstract final class AppStrings {
   static const favoriteArtistsSubtitle = 'Choose 3 or more artists you like.';
   static const searchArtists = 'Search artists';
   static const artistName = 'Artist Name';
-  
+
   static const nowChooseSomePodcasts = 'Now choose some podcasts.';
   static const searchPodcasts = 'Search podcasts';
   static const podcastName = 'Podcast Name';
@@ -57,13 +57,32 @@ abstract final class AppStrings {
   static const home = 'Home';
   static const search = 'Search';
   static const library = 'Library';
+  static const searchHint = 'Artists, songs, or podcasts';
+  static const yourTopGenres = 'Your top genres';
+  static const popularPodcastCategories = 'Popular podcast categories';
+  static const browseAll = 'Browse all';
+  static const searchInputTitle = 'Search';
+  static const searchInputPlaceholder = 'What do you want to listen to?';
+  static const searchComingSoon =
+      'Search results and suggestions will appear here.';
+  static const genrePop = 'Pop';
+  static const genreIndie = 'Indie';
+  static const categoryNewsPolitics = 'News &\nPolitics';
+  static const categoryComedy = 'Comedy';
+  static const categoryCharts = 'Charts';
+  static const categoryMadeForYou = 'Made for you';
+  static const categoryPodcasts = 'Podcasts';
+  static const categoryWrapped2026 = '2026 Wrapped';
+  static const miniPlayerOpen = 'Open now playing';
+  static const miniPlayerPlayPause = 'Play or pause';
+  static const miniPlayerNext = 'Next track';
 
   // home tab
   static const recentlyPlayed = 'Recently played';
   static const your2026InReview = 'Your 2026 in review';
   static const onThisDevice = 'On this device';
   static const editorsPicks = 'Editor’s picks';
-  static const nameMusic= 'Name music';
+  static const nameMusic = 'Name music';
   static const gramophoneWrapped = '#Gramophone_Wrapped';
   // Common
   static const loading = 'Loading...';
@@ -80,4 +99,15 @@ abstract final class AppStrings {
   static const pause = 'Pause';
   static const next = 'Next';
   static const previous = 'Previous';
+  static const more = 'More';
+  static const lyrics = 'Lyrics';
+  static const download = 'Download';
+  static const addToPlaylist = 'Add to playlist';
+  static const noOfflineTracks = 'No offline tracks yet.';
+  static const addedToPlaylist = 'Added to playlist';
+  static const alreadyDownloaded = 'Already downloaded';
+  static const downloadedSuccessfully = 'Downloaded successfully';
+  static const audioBackendUnavailable =
+      'Audio backend is not available on this build. Please run a full restart.';
+  static const queueIsEmpty = 'Queue is empty.';
 }
