@@ -49,6 +49,10 @@ dependencies:
   audio_service: ^0.18.18
   window_manager: ^0.5.0
   path_provider: ^2.1.5
+  on_audio_query: ^2.9.0
+  permission_handler: ^12.0.1
+  file_picker: ^10.3.2
+  flutter_media_metadata: ^1.0.0+1
 
   # runtime
   freezed_annotation: ^3.1.0
@@ -68,6 +72,8 @@ dev_dependencies:
 dependency_overrides:
   just_audio_windows:
     path: third_party/just_audio_windows_patched
+  flutter_media_metadata:
+    path: third_party/flutter_media_metadata_patched
 
 flutter:
 

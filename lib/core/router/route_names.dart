@@ -16,6 +16,11 @@ class RouteNames {
   static const searchInputPage = 'SearchInputPage';
   static const searchInputPageLocation = '$searchTabPage/$searchInputPage';
   static const libraryTabPage = '/LibraryTabPage';
+  static const libraryAlbumListPage = '/LibraryAlbumListPage';
+  static const libraryAlbumDetailPage = '/LibraryAlbumDetailPage';
+  static const libraryTracksPage = '/LibraryTracksPage';
+  static const libraryPlaylistsPage = '/LibraryPlaylistsPage';
+  static const libraryPlaylistDetailPage = '/LibraryPlaylistDetailPage';
 
   // player
   static const playerPage = '/PlayerPage';

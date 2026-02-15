@@ -3,6 +3,7 @@ import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/main/data/datasources/offline_download_data_source.dart';
 import 'package:gramophone/features/main/domain/repositories/main_repository.dart';
 import 'package:gramophone/features/player/data/datasources/player_local_data_source.dart';
+import 'package:gramophone/features/player/domain/models/player_playlist.dart';
 import 'package:gramophone/features/player/domain/repositories/player_repository.dart';
 
 class PlayerRepositoryImpl implements PlayerRepository {
@@ -46,9 +47,54 @@ class PlayerRepositoryImpl implements PlayerRepository {
   Future<void> toggleLike(String trackId) => _local.toggleLike(trackId);
 
   @override
+  Future<void> toggleLikeTrack(Track track) => _local.toggleLikeTrack(track);
+
+  @override
+  Future<List<Track>> getLikedTracks() => _local.getLikedTracks();
+
+  @override
+  Stream<List<Track>> watchLikedTracks() => _local.watchLikedTracks();
+
+  @override
   Future<void> addToPlaylist(String trackId, {String? playlistId}) {
     return _local.addToPlaylist(trackId, playlistId: playlistId);
   }
+
+  @override
+  Future<List<PlayerPlaylist>> getPlaylists() async {
+    final raw = await _local.getPlaylists();
+    return raw
+        .map(
+          (item) => PlayerPlaylist(
+            id: item.id,
+            name: item.name,
+            trackIds: item.trackIds,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Stream<List<PlayerPlaylist>> watchPlaylists() async* {
+    await for (final raw in _local.watchPlaylists()) {
+      yield raw
+          .map(
+            (item) => PlayerPlaylist(
+              id: item.id,
+              name: item.name,
+              trackIds: item.trackIds,
+              createdAt: item.createdAt,
+              updatedAt: item.updatedAt,
+            ),
+          )
+          .toList();
+    }
+  }
+
+  @override
+  Future<String> createPlaylist(String name) => _local.createPlaylist(name);
 
   @override
   Future<List<Track>> getOfflineTracks() async {
@@ -58,6 +104,13 @@ class PlayerRepositoryImpl implements PlayerRepository {
         return result.data;
       case ResultFailure<List<Track>>():
         return const [];
+    }
+  }
+
+  @override
+  Stream<List<Track>> watchDownloadedTracks() async* {
+    await for (final records in _offline.watchDownloadedTracks()) {
+      yield records.map((item) => item.toEntity()).toList();
     }
   }
 }

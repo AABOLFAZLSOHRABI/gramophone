@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gramophone/core/di/service_locator.dart';
@@ -188,6 +189,7 @@ class _ReviewSection extends StatelessWidget {
     if (items.isEmpty) {
       return _ReviewPlaceholder();
     }
+    final headerImageUrl = items.first.imageUrl?.trim();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,11 +200,25 @@ class _ReviewSection extends StatelessWidget {
             height: 60.h,
             child: Row(
               children: [
-                Image.asset(
-                  Assets.images.logoApp.path,
-                  height: 58.h,
-                  fit: BoxFit.cover,
-                ),
+                (headerImageUrl == null || headerImageUrl.isEmpty)
+                    ? Image.asset(
+                        Assets.images.logoApp.path,
+                        height: 58.h,
+                        width: 58.h,
+                        fit: BoxFit.cover,
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: headerImageUrl,
+                        height: 58.h,
+                        width: 58.h,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => Image.asset(
+                          Assets.images.logoApp.path,
+                          height: 58.h,
+                          width: 58.h,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                 Padding(
                   padding: EdgeInsets.only(left: 10.w),
                   child: Column(
@@ -233,12 +249,6 @@ class _ReviewSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 10.w),
             itemBuilder: (_, index) {
               final item = items[index];
-              final reviewTrack = Track(
-                id: item.id,
-                title: item.title,
-                artist: item.subtitle,
-                imageUrl: item.imageUrl,
-              );
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 7.w),
                 child: MediaItemCard(
@@ -248,8 +258,7 @@ class _ReviewSection extends StatelessWidget {
                   imageWidth: 155.w,
                   imageHeight: 155.h,
                   onTap: () {
-                    if (reviewTrack.streamUrl == null ||
-                        reviewTrack.streamUrl!.isEmpty) {
+                    if (item.tracks.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(AppStrings.reviewItemNotPlayable),
@@ -257,15 +266,7 @@ class _ReviewSection extends StatelessWidget {
                       );
                       return;
                     }
-                    final queue = items
-                        .map(
-                          (reviewItem) => Track(
-                            id: reviewItem.id,
-                            title: reviewItem.title,
-                            artist: reviewItem.subtitle,
-                            imageUrl: reviewItem.imageUrl,
-                          ),
-                        )
+                    final queue = item.tracks
                         .where(
                           (track) =>
                               track.streamUrl != null &&
@@ -280,17 +281,14 @@ class _ReviewSection extends StatelessWidget {
                       );
                       return;
                     }
-                    final startIndex = queue.indexWhere(
-                      (itemTrack) => itemTrack.id == reviewTrack.id,
-                    );
                     sl<PlayerBloc>().add(
                       PlayTrackRequested(
                         queue: queue,
-                        index: startIndex >= 0 ? startIndex : 0,
+                        index: 0,
                         autoPlay: true,
                       ),
                     );
-                    context.push(RouteNames.playerPage, extra: reviewTrack);
+                    context.push(RouteNames.playerPage, extra: queue.first);
                   },
                 ),
               );

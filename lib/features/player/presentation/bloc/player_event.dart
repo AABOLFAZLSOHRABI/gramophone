@@ -1,4 +1,5 @@
 import 'package:gramophone/domain/entities/track.dart';
+import 'package:gramophone/features/player/domain/models/player_playlist.dart';
 
 sealed class PlayerEvent {
   const PlayerEvent();
@@ -43,9 +44,9 @@ final class SeekChanged extends PlayerEvent {
 }
 
 final class ToggleLikePressed extends PlayerEvent {
-  const ToggleLikePressed(this.trackId);
+  const ToggleLikePressed(this.track);
 
-  final String trackId;
+  final Track track;
 }
 
 final class AddToPlaylistPressed extends PlayerEvent {
@@ -59,6 +60,30 @@ final class DownloadPressed extends PlayerEvent {
   const DownloadPressed(this.track);
 
   final Track track;
+}
+
+final class EnsureAutoplayRequested extends PlayerEvent {
+  const EnsureAutoplayRequested(this.track);
+
+  final Track track;
+}
+
+final class ToggleShufflePressed extends PlayerEvent {
+  const ToggleShufflePressed();
+}
+
+final class ToggleRepeatPressed extends PlayerEvent {
+  const ToggleRepeatPressed();
+}
+
+final class LoadPlaylistsRequested extends PlayerEvent {
+  const LoadPlaylistsRequested();
+}
+
+final class CreatePlaylistPressed extends PlayerEvent {
+  const CreatePlaylistPressed(this.name);
+
+  final String name;
 }
 
 final class MessageConsumed extends PlayerEvent {
@@ -87,4 +112,22 @@ final class CompletedChangedInternal extends PlayerEvent {
   const CompletedChangedInternal(this.completed);
 
   final bool completed;
+}
+
+final class LikedTracksUpdatedInternal extends PlayerEvent {
+  const LikedTracksUpdatedInternal(this.tracks);
+
+  final List<Track> tracks;
+}
+
+final class DownloadedTracksUpdatedInternal extends PlayerEvent {
+  const DownloadedTracksUpdatedInternal(this.tracks);
+
+  final List<Track> tracks;
+}
+
+final class PlaylistsUpdatedInternal extends PlayerEvent {
+  const PlaylistsUpdatedInternal(this.playlists);
+
+  final List<PlayerPlaylist> playlists;
 }

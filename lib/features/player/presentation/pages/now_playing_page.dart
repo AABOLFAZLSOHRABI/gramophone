@@ -13,28 +13,49 @@ import 'package:gramophone/features/player/presentation/bloc/player_event.dart';
 import 'package:gramophone/features/player/presentation/bloc/player_state.dart';
 import 'package:gramophone/gen/assets.gen.dart';
 
-class NowPlayingScreen extends StatelessWidget {
-  NowPlayingScreen({
+class NowPlayingScreen extends StatefulWidget {
+  const NowPlayingScreen({
     super.key,
     this.track,
     this.title = 'Track Title',
     this.artist = 'Artist Name',
-    ImageProvider? albumImageProvider,
     this.current = const Duration(seconds: 0),
     this.total = const Duration(minutes: 3),
-    this.isShuffleOn = false,
-    this.isRepeatOn = true,
-  }) : albumImageProvider =
-           albumImageProvider ?? Assets.images.gramophoneBackground.provider();
+  });
 
   final Track? track;
   final String title;
   final String artist;
-  final ImageProvider albumImageProvider;
   final Duration current;
   final Duration total;
-  final bool isShuffleOn;
-  final bool isRepeatOn;
+
+  @override
+  State<NowPlayingScreen> createState() => _NowPlayingScreenState();
+}
+
+class _NowPlayingScreenState extends State<NowPlayingScreen> {
+  final PlayerBloc _bloc = sl<PlayerBloc>();
+  final TextEditingController _playlistNameCtrl = TextEditingController();
+  bool _autoplayEnsured = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final routeTrack = widget.track;
+      if (routeTrack != null && !_autoplayEnsured) {
+        _autoplayEnsured = true;
+        _bloc.add(EnsureAutoplayRequested(routeTrack));
+      }
+      _bloc.add(const LoadPlaylistsRequested());
+    });
+  }
+
+  @override
+  void dispose() {
+    _playlistNameCtrl.dispose();
+    super.dispose();
+  }
 
   String _format(Duration d) {
     final m = d.inMinutes.remainder(60).toString();
@@ -42,31 +63,109 @@ class NowPlayingScreen extends StatelessWidget {
     return '$m:$s';
   }
 
+  void _showPlaylistSheet(Track track, PlayerState playerState) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.btmNavColor,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: Text(track.title, style: AppTextStyles.titleMedium),
+                  subtitle: Text(track.artist, style: AppTextStyles.textHint),
+                ),
+                if (playerState.playlists.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
+                    child: Text(
+                      'No playlists yet. Create one below.',
+                      style: AppTextStyles.textHint,
+                    ),
+                  ),
+                ...playerState.playlists.map(
+                  (playlist) => ListTile(
+                    leading: const Icon(Icons.queue_music_rounded),
+                    title: Text(playlist.name),
+                    subtitle: Text('${playlist.trackIds.length} tracks'),
+                    onTap: () {
+                      _bloc.add(
+                        AddToPlaylistPressed(track.id, playlistId: playlist.id),
+                      );
+                      Navigator.pop(sheetContext);
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 14.h),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _playlistNameCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'New playlist name',
+                          ),
+                        ),
+                      ),
+                      8.w.width,
+                      ElevatedButton(
+                        onPressed: () {
+                          final name = _playlistNameCtrl.text.trim();
+                          if (name.isEmpty) {
+                            return;
+                          }
+                          _bloc.add(CreatePlaylistPressed(name));
+                          _playlistNameCtrl.clear();
+                        },
+                        child: const Text('Create'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final albumImageProvider = Assets.images.gramophoneBackground.provider();
     return BlocConsumer<PlayerBloc, PlayerState>(
-      bloc: sl<PlayerBloc>(),
+      bloc: _bloc,
       listener: (context, state) {
         final message = state.errorMessage ?? state.infoMessage;
         if (message != null && message.isNotEmpty) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-          sl<PlayerBloc>().add(const MessageConsumed());
+          _bloc.add(const MessageConsumed());
         }
       },
       builder: (context, playerState) {
-        final resolvedTrack = playerState.currentTrack ?? track;
+        final resolvedTrack = playerState.currentTrack ?? widget.track;
 
         final trackTitle = resolvedTrack?.title.trim();
         final resolvedTitle = (trackTitle != null && trackTitle.isNotEmpty)
             ? trackTitle
-            : title;
+            : widget.title;
 
         final trackArtist = resolvedTrack?.artist.trim();
         final resolvedArtist = (trackArtist != null && trackArtist.isNotEmpty)
             ? trackArtist
-            : artist;
+            : widget.artist;
 
         final cachedImageUrl = resolvedTrack?.imageUrl?.trim();
         final hasTrackImage =
@@ -82,7 +181,7 @@ class NowPlayingScreen extends StatelessWidget {
         final hasKnownDuration = resolvedTotal > Duration.zero;
         final resolvedCurrent = playerState.position > Duration.zero
             ? playerState.position
-            : current;
+            : widget.current;
         final currentSeconds = hasKnownDuration
             ? resolvedCurrent.inSeconds.clamp(0, resolvedTotal.inSeconds)
             : resolvedCurrent.inSeconds.clamp(0, 0);
@@ -138,7 +237,11 @@ class NowPlayingScreen extends StatelessWidget {
                           const Spacer(),
                           _GlassIconButton(
                             icon: Icons.more_horiz_rounded,
-                            onTap: () {},
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Coming soon')),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -153,8 +256,9 @@ class NowPlayingScreen extends StatelessWidget {
                             icon: Icons.playlist_add_rounded,
                             onTap: resolvedTrack == null
                                 ? () {}
-                                : () => sl<PlayerBloc>().add(
-                                    AddToPlaylistPressed(resolvedTrack.id),
+                                : () => _showPlaylistSheet(
+                                    resolvedTrack,
+                                    playerState,
                                   ),
                           ),
                           _GlassIconButton(
@@ -167,9 +271,8 @@ class NowPlayingScreen extends StatelessWidget {
                                 : null,
                             onTap: resolvedTrack == null
                                 ? () {}
-                                : () => sl<PlayerBloc>().add(
-                                    DownloadPressed(resolvedTrack),
-                                  ),
+                                : () =>
+                                      _bloc.add(DownloadPressed(resolvedTrack)),
                           ),
                         ],
                       ),
@@ -250,8 +353,8 @@ class NowPlayingScreen extends StatelessWidget {
                               IconButton(
                                 onPressed: resolvedTrack == null
                                     ? null
-                                    : () => sl<PlayerBloc>().add(
-                                        ToggleLikePressed(resolvedTrack.id),
+                                    : () => _bloc.add(
+                                        ToggleLikePressed(resolvedTrack),
                                       ),
                                 icon: Icon(
                                   playerState.isLiked
@@ -291,7 +394,7 @@ class NowPlayingScreen extends StatelessWidget {
                                             (resolvedTotal.inSeconds * newValue)
                                                 .round(),
                                       );
-                                      sl<PlayerBloc>().add(SeekChanged(target));
+                                      _bloc.add(SeekChanged(target));
                                     }
                                   : null,
                             ),
@@ -324,77 +427,85 @@ class NowPlayingScreen extends StatelessWidget {
                             children: [
                               _MiniIcon(
                                 icon: Icons.shuffle_rounded,
-                                isActive: isShuffleOn,
+                                isActive: playerState.isShuffleOn,
+                                onTap: () =>
+                                    _bloc.add(const ToggleShufflePressed()),
                               ),
                               _MiniIcon(
                                 icon: Icons.skip_previous_rounded,
                                 size: 34.r,
-                                onTap: () => sl<PlayerBloc>().add(
-                                  const PreviousPressed(),
-                                ),
+                                onTap: () => _bloc.add(const PreviousPressed()),
                               ),
                               _PlayButton(
                                 isPlaying: playerState.isPlaying,
-                                onTap: () => sl<PlayerBloc>().add(
-                                  const TogglePlayPausePressed(),
-                                ),
+                                onTap: () =>
+                                    _bloc.add(const TogglePlayPausePressed()),
                               ),
                               _MiniIcon(
                                 icon: Icons.skip_next_rounded,
                                 size: 34.r,
-                                onTap: () =>
-                                    sl<PlayerBloc>().add(const NextPressed()),
+                                onTap: () => _bloc.add(const NextPressed()),
                               ),
                               _MiniIcon(
                                 icon: Icons.repeat_rounded,
-                                isActive: isRepeatOn,
+                                isActive: playerState.isRepeatOn,
+                                onTap: () =>
+                                    _bloc.add(const ToggleRepeatPressed()),
                               ),
                             ],
                           ),
                           12.h.height,
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 10.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(14.r),
-                              border: Border.all(
+                          GestureDetector(
+                            onTap: () =>
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Coming soon')),
+                                ),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 10.h,
+                              ),
+                              decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(
-                                  alpha: 0.28,
+                                  alpha: 0.14,
+                                ),
+                                borderRadius: BorderRadius.circular(14.r),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.28,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.graphic_eq_rounded,
-                                  color: AppColors.primary,
-                                  size: 20.r,
-                                ),
-                                8.w.width,
-                                Text(
-                                  AppStrings.lyrics,
-                                  style: AppTextStyles.titleMedium.copyWith(
-                                    color: AppColors.textWhite,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.graphic_eq_rounded,
+                                    color: AppColors.primary,
+                                    size: 20.r,
                                   ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  AppStrings.more,
-                                  style: AppTextStyles.titleSmall.copyWith(
-                                    color: AppColors.textWhite,
+                                  8.w.width,
+                                  Text(
+                                    AppStrings.lyrics,
+                                    style: AppTextStyles.titleMedium.copyWith(
+                                      color: AppColors.textWhite,
+                                    ),
                                   ),
-                                ),
-                                6.w.width,
-                                Icon(
-                                  Icons.open_in_full_rounded,
-                                  color: AppColors.textWhite,
-                                  size: 16.r,
-                                ),
-                              ],
+                                  const Spacer(),
+                                  Text(
+                                    AppStrings.more,
+                                    style: AppTextStyles.titleSmall.copyWith(
+                                      color: AppColors.textWhite,
+                                    ),
+                                  ),
+                                  6.w.width,
+                                  Icon(
+                                    Icons.open_in_full_rounded,
+                                    color: AppColors.textWhite,
+                                    size: 16.r,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

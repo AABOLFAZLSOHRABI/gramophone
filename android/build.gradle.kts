@@ -1,3 +1,5 @@
+import com.android.build.gradle.LibraryExtension
+
 allprojects {
     repositories {
         google()
@@ -15,8 +17,29 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    plugins.withId("com.android.library") {
+        extensions.configure<LibraryExtension>("android") {
+            if (namespace.isNullOrEmpty()) {
+                val manifestFile = project.file("src/main/AndroidManifest.xml")
+                val manifestPackage = if (manifestFile.exists()) {
+                    Regex("""package\s*=\s*"([^"]+)"""")
+                        .find(manifestFile.readText())
+                        ?.groupValues
+                        ?.get(1)
+                } else {
+                    null
+                }
+
+                namespace = manifestPackage ?: project.group.toString()
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

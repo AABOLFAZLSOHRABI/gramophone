@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gramophone/core/network/dio_client.dart';
 import 'package:gramophone/core/network/failure.dart';
 import 'package:gramophone/core/result/result.dart';
+import 'package:gramophone/data/dtos/artwork_dto.dart';
 import 'package:gramophone/data/dtos/playlist_dto.dart';
 import 'package:gramophone/data/dtos/track_dto.dart';
 import 'package:gramophone/domain/entities/review_item.dart';
@@ -45,24 +46,33 @@ void main() {
 
       expect(results.length, 2);
       expect(results[0], isA<ResultSuccess<List<Track>>>());
-      expect((results[0] as ResultSuccess<List<Track>>).data.first.title, 'cached');
-      expect(results[1], isA<ResultSuccess<List<Track>>>());
-      expect((results[1] as ResultSuccess<List<Track>>).data.first.title, 'fresh');
-    });
-
-    test('watchTrendingTracks emits failure when no cache and remote fails', () async {
-      remote.error = DioException(
-        requestOptions: RequestOptions(path: '/tracks/trending'),
-        type: DioExceptionType.connectionError,
+      expect(
+        (results[0] as ResultSuccess<List<Track>>).data.first.title,
+        'cached',
       );
-
-      final results = await repository.watchTrendingTracks().toList();
-
-      expect(results.length, 1);
-      expect(results.first, isA<ResultFailure<List<Track>>>());
-      final failure = (results.first as ResultFailure<List<Track>>).failure;
-      expect(failure, isA<NetworkFailure>());
+      expect(results[1], isA<ResultSuccess<List<Track>>>());
+      expect(
+        (results[1] as ResultSuccess<List<Track>>).data.first.title,
+        'fresh',
+      );
     });
+
+    test(
+      'watchTrendingTracks emits failure when no cache and remote fails',
+      () async {
+        remote.error = DioException(
+          requestOptions: RequestOptions(path: '/tracks/trending'),
+          type: DioExceptionType.connectionError,
+        );
+
+        final results = await repository.watchTrendingTracks().toList();
+
+        expect(results.length, 1);
+        expect(results.first, isA<ResultFailure<List<Track>>>());
+        final failure = (results.first as ResultFailure<List<Track>>).failure;
+        expect(failure, isA<NetworkFailure>());
+      },
+    );
 
     test('refreshTrendingTracks returns success and writes cache', () async {
       remote.responseTracks = [_dto(id: '7', title: 'remote')];
@@ -85,27 +95,41 @@ void main() {
       expect(local.cachedTracks.first.title, 'cached');
     });
 
-    test('getTrendingTracksFromApi returns mapped failure on dio error', () async {
-      remote.error = DioException(
-        requestOptions: RequestOptions(path: '/tracks/trending'),
-        type: DioExceptionType.connectionError,
-      );
+    test(
+      'getTrendingTracksFromApi returns mapped failure on dio error',
+      () async {
+        remote.error = DioException(
+          requestOptions: RequestOptions(path: '/tracks/trending'),
+          type: DioExceptionType.connectionError,
+        );
 
-      final result = await repository.getTrendingTracksFromApi();
+        final result = await repository.getTrendingTracksFromApi();
 
-      expect(result, isA<ResultFailure<List<Track>>>());
-      expect((result as ResultFailure<List<Track>>).failure, isA<NetworkFailure>());
-    });
+        expect(result, isA<ResultFailure<List<Track>>>());
+        expect(
+          (result as ResultFailure<List<Track>>).failure,
+          isA<NetworkFailure>(),
+        );
+      },
+    );
 
-    test('downloadTrack returns success and skips when already downloaded', () async {
-      offline.isDownloadedByTrackId['10'] = true;
-      const track = Track(id: '10', title: 'a', artist: 'b', streamUrl: 'https://x');
+    test(
+      'downloadTrack returns success and skips when already downloaded',
+      () async {
+        offline.isDownloadedByTrackId['10'] = true;
+        const track = Track(
+          id: '10',
+          title: 'a',
+          artist: 'b',
+          streamUrl: 'https://x',
+        );
 
-      final result = await repository.downloadTrack(track);
+        final result = await repository.downloadTrack(track);
 
-      expect(result, isA<ResultSuccess<void>>());
-      expect(dioClient.downloadCalls, 0);
-    });
+        expect(result, isA<ResultSuccess<void>>());
+        expect(dioClient.downloadCalls, 0);
+      },
+    );
 
     test('getReviewItemsFromApi maps playlist dto to review item', () async {
       remote.responsePlaylists = const [
@@ -115,6 +139,15 @@ void main() {
           creatorName: 'DJ Test',
           description: 'Top tracks of the year',
           artwork480: 'https://img.test/480.jpg',
+          tracks: [
+            TrackDto(
+              id: 't-1',
+              title: 'Track One',
+              artist: 'DJ Test',
+              streamUrl: 'https://stream.test/1',
+              artwork: ArtworkDto(x1000: 'https://img.test/track-1.jpg'),
+            ),
+          ],
         ),
       ];
 
@@ -125,6 +158,9 @@ void main() {
       expect(items.first.id, 'pl-1');
       expect(items.first.title, 'My Playlist');
       expect(items.first.subtitle, 'Top tracks of the year');
+      expect(items.first.imageUrl, 'https://img.test/track-1.jpg');
+      expect(items.first.tracks, isNotEmpty);
+      expect(items.first.tracks.first.streamUrl, isNotEmpty);
     });
 
     test('watchOfflineTracks emits downloaded tracks as success', () async {
@@ -149,12 +185,7 @@ void main() {
 }
 
 TrackDto _dto({required String id, required String title}) {
-  return TrackDto(
-    id: id,
-    title: title,
-    artist: 'artist',
-    streamUrl: '',
-  );
+  return TrackDto(id: id, title: title, artist: 'artist', streamUrl: '');
 }
 
 class FakeAudiusRemoteDataSource extends AudiusRemoteDataSource {

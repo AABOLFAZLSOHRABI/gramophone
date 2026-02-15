@@ -4,7 +4,9 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
+  flutter_media_metadata
   just_audio_windows
+  permission_handler_windows
   screen_retriever_windows
   window_manager
 )

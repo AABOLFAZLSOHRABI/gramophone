@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  flutter_media_metadata
   screen_retriever_linux
   window_manager
 )

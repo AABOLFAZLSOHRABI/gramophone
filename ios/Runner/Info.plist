@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Gram needs access to your media library to scan local audio files.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Gram may read album artwork from your local media.</string>
 </dict>
 </plist>

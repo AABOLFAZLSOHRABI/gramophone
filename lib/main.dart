@@ -8,6 +8,7 @@ import 'package:gramophone/core/di/service_locator.dart';
 import 'package:gramophone/core/observer/player_bloc_observer.dart';
 import 'package:gramophone/core/router/app_router.dart';
 import 'package:gramophone/core/ui/theme/app_theme.dart';
+import 'package:gramophone/features/library/data/datasources/library_local_cache_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/main_local_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/offline_download_data_source.dart';
 import 'package:gramophone/features/player/data/datasources/player_local_data_source.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
     Hive.openBox<dynamic>(OfflineDownloadDataSource.offlineTracksBoxName),
     Hive.openBox<dynamic>(PlayerLocalDataSource.likesBoxName),
     Hive.openBox<dynamic>(PlayerLocalDataSource.playlistsBoxName),
+    Hive.openBox<dynamic>(LibraryLocalCacheDataSource.localLibraryBoxName),
   ]);
   await setupServiceLocator();
   if (Platform.isWindows) {

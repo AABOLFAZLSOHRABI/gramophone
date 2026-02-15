@@ -4,117 +4,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramophone/core/di/service_locator.dart';
-import 'package:gramophone/core/network/failure.dart';
-import 'package:gramophone/core/result/result.dart';
-import 'package:gramophone/core/ui/l10n/app_strings.dart';
-import 'package:gramophone/domain/entities/review_item.dart';
-import 'package:gramophone/domain/entities/track.dart';
-import 'package:gramophone/features/main/domain/repositories/main_repository.dart';
+import 'package:gramophone/features/library/domain/entities/library_playlist.dart';
+import 'package:gramophone/features/library/domain/entities/library_source_type.dart';
+import 'package:gramophone/features/library/domain/entities/library_track.dart';
+import 'package:gramophone/features/library/domain/repositories/library_repository.dart';
+import 'package:gramophone/features/library/presentation/cubit/library_cubit.dart';
 import 'package:gramophone/features/main/pages/tabs/library_tab_page.dart';
 
 void main() {
-  late FakeMainRepository repository;
+  late FakeLibraryRepository repository;
 
   setUp(() async {
     await sl.reset();
-    repository = FakeMainRepository();
-    sl.registerLazySingleton<MainRepository>(() => repository);
+    repository = FakeLibraryRepository();
+    sl.registerLazySingleton<LibraryRepository>(() => repository);
+    sl.registerLazySingleton<LibraryCubit>(
+      () => LibraryCubit(sl<LibraryRepository>()),
+    );
   });
 
   tearDown(() async {
     await sl.reset();
   });
 
-  testWidgets('renders library header, quick access and horizontal sections', (
-    tester,
-  ) async {
-    repository.offlineStream = Stream<Result<List<Track>>>.value(
-      const ResultSuccess([]),
-    );
+  testWidgets('renders library shell and source switcher', (tester) async {
+    await tester.pumpWidget(_wrap(const LibraryTabPage()));
+    await tester.pump();
 
+    expect(find.text('Library'), findsOneWidget);
+    expect(find.text('Local'), findsOneWidget);
+    expect(find.text('Gram'), findsOneWidget);
+  });
+
+  testWidgets('shows tracks and quick access cards', (tester) async {
     await tester.pumpWidget(_wrap(const LibraryTabPage()));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.library), findsOneWidget);
-    expect(find.text(AppStrings.libraryQuickAccess), findsOneWidget);
-    expect(find.text(AppStrings.libraryAlbums), findsOneWidget);
-    expect(find.text(AppStrings.libraryLikedSongs), findsOneWidget);
-    expect(find.text(AppStrings.libraryRecentlyAdded), findsOneWidget);
+    expect(find.text('All Songs'), findsWidgets);
+    expect(find.text('Albums'), findsWidgets);
+    expect(find.text('Downloaded'), findsWidgets);
+    expect(find.text('Liked'), findsWidgets);
   });
 
-  testWidgets('shows loading state for downloaded section before first data', (
-    tester,
-  ) async {
-    final controller = StreamController<Result<List<Track>>>();
-    repository.offlineStream = controller.stream;
-
-    await tester.pumpWidget(_wrap(const LibraryTabPage()));
-    await tester.scrollUntilVisible(
-      find.byType(CircularProgressIndicator),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-    await controller.close();
-  });
-
-  testWidgets('shows empty downloaded state when stream result is empty', (
-    tester,
-  ) async {
-    repository.offlineStream = Stream<Result<List<Track>>>.value(
-      const ResultSuccess([]),
-    );
-
+  testWidgets('switches source to gram', (tester) async {
     await tester.pumpWidget(_wrap(const LibraryTabPage()));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text(AppStrings.libraryDownloadsEmptyHint),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
 
-    expect(find.text(AppStrings.libraryDownloadsEmptyHint), findsOneWidget);
+    await tester.tap(find.text('Gram'));
+    await tester.pumpAndSettle();
+
+    final cubit = sl<LibraryCubit>();
+    expect(cubit.state.source, LibrarySourceType.gram);
   });
 
-  testWidgets('shows downloaded tracks list when stream has data', (
-    tester,
-  ) async {
-    repository.offlineStream = Stream<Result<List<Track>>>.value(
-      const ResultSuccess([
-        Track(id: '1', title: 'Offline Track', artist: 'Artist'),
-      ]),
-    );
-
+  testWidgets('filters list by search query', (tester) async {
     await tester.pumpWidget(_wrap(const LibraryTabPage()));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Offline Track'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
 
-    expect(find.text('Offline Track'), findsOneWidget);
-    expect(find.text('Artist'), findsOneWidget);
-  });
+    await tester.enterText(find.byType(TextField).first, 'Local');
+    await tester.pump(const Duration(milliseconds: 350));
 
-  testWidgets('shows failure message when stream returns failure', (
-    tester,
-  ) async {
-    repository.offlineStream = Stream<Result<List<Track>>>.value(
-      ResultFailure(ServerFailure('download failed')),
-    );
-
-    await tester.pumpWidget(_wrap(const LibraryTabPage()));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('download failed'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    expect(find.text('download failed'), findsOneWidget);
+    expect(find.text('Local One'), findsOneWidget);
   });
 }
 
@@ -127,61 +77,83 @@ Widget _wrap(Widget child) {
   );
 }
 
-class FakeMainRepository implements MainRepository {
-  Stream<Result<List<Track>>> offlineStream = Stream<Result<List<Track>>>.value(
-    const ResultSuccess([]),
-  );
+class FakeLibraryRepository implements LibraryRepository {
+  final List<LibraryTrack> _local = const [
+    LibraryTrack(id: 'l1', title: 'Local One', artist: 'Artist A'),
+    LibraryTrack(id: 'l2', title: 'Local Two', artist: 'Artist B'),
+  ];
+  final List<LibraryTrack> _gram = const [
+    LibraryTrack(id: 'g1', title: 'Gram One', artist: 'Artist G'),
+  ];
+  final List<LibraryTrack> _downloaded = const [];
+  final List<LibraryTrack> _liked = const [];
+  final List<LibraryPlaylist> _playlists = [
+    LibraryPlaylist(
+      id: 'p1',
+      name: 'My Playlist',
+      trackIds: ['g1'],
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 2),
+    ),
+  ];
+
+  FakeLibraryRepository();
 
   @override
-  Stream<Result<List<Track>>> watchOfflineTracks() => offlineStream;
+  Future<void> addToPlaylist(String trackId, String playlistId) async {}
 
   @override
-  Future<Result<void>> downloadTrack(Track track) async {
-    return const ResultSuccess(null);
-  }
+  Future<String> createPlaylist(String name) async => 'new';
 
   @override
-  Future<Result<List<Track>>> getTrendingTracksFromApi({
-    int offset = 0,
-    int limit = 20,
-    String time = 'week',
-    String? genre,
+  Future<void> deletePlaylist(String id) async {}
+
+  @override
+  Future<void> refreshGramData() async {}
+
+  @override
+  Future<void> renamePlaylist(String id, String name) async {}
+
+  @override
+  Future<void> scanLocalLibrary({bool pickFoldersOnDesktop = false}) async {}
+
+  @override
+  Future<List<LibraryTrack>> search({
+    required LibrarySourceType source,
+    required String query,
   }) async {
-    return const ResultSuccess([]);
+    return const [];
   }
 
   @override
-  Future<Result<void>> refreshTrendingTracks({
-    int limit = 20,
-    String time = 'week',
-  }) async {
-    return const ResultSuccess(null);
+  Future<void> toggleLike(String trackId) async {}
+
+  @override
+  Stream<List<LibraryTrack>> watchGramAllTracks() async* {
+    yield _gram;
   }
 
   @override
-  Stream<Result<List<Track>>> watchTrendingTracks({
-    int limit = 20,
-    String time = 'week',
-  }) async* {
-    yield const ResultSuccess([]);
+  Stream<List<LibraryTrack>> watchGramDownloadedTracks() async* {
+    yield _downloaded;
   }
 
   @override
-  Future<Result<List<ReviewItem>>> getReviewItemsFromApi({
-    int offset = 0,
-    int limit = 10,
-    String time = 'week',
-  }) async {
-    return const ResultSuccess([]);
+  Stream<List<LibraryTrack>> watchGramLikedTracks() async* {
+    yield _liked;
   }
 
   @override
-  Future<Result<bool>> isTrackDownloaded(String trackId) async {
-    return const ResultSuccess(false);
+  Stream<List<LibraryPlaylist>> watchGramPlaylists() async* {
+    yield _playlists;
   }
 
   @override
-  Future<Result<void>> removeOfflineTrack(String trackId) async {
-    return const ResultSuccess(null);
+  Stream<List<LibraryTrack>> watchLocalTracks() async* {
+    yield _local;
   }
+
+  @override
+  Future<List<LibraryTrack>> getTracksForPlaylist(String playlistId) async =>
+      const [];
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
@@ -7,6 +8,8 @@ import '../models/downloaded_track_record.dart';
 
 class OfflineDownloadDataSource {
   static const offlineTracksBoxName = 'offline_tracks_box';
+  final StreamController<List<DownloadedTrackRecord>> _downloadedController =
+      StreamController<List<DownloadedTrackRecord>>.broadcast();
 
   Box<dynamic> get _box => Hive.box<dynamic>(offlineTracksBoxName);
 
@@ -31,6 +34,7 @@ class OfflineDownloadDataSource {
     );
 
     await _box.put(track.id, record.toMap());
+    await _emitDownloaded();
   }
 
   Future<List<DownloadedTrackRecord>> getDownloadedTracks() async {
@@ -114,5 +118,15 @@ class OfflineDownloadDataSource {
     }
 
     await _box.delete(trackId);
+    await _emitDownloaded();
+  }
+
+  Stream<List<DownloadedTrackRecord>> watchDownloadedTracks() async* {
+    yield await getDownloadedTracks();
+    yield* _downloadedController.stream;
+  }
+
+  Future<void> _emitDownloaded() async {
+    _downloadedController.add(await getDownloadedTracks());
   }
 }

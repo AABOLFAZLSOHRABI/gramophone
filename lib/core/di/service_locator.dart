@@ -1,5 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:gramophone/features/library/data/datasources/library_local_cache_data_source.dart';
+import 'package:gramophone/features/library/data/datasources/local_media_data_source.dart';
+import 'package:gramophone/features/library/data/library_repository_impl.dart';
+import 'package:gramophone/features/library/domain/repositories/library_repository.dart';
+import 'package:gramophone/features/library/presentation/cubit/library_cubit.dart';
 import 'package:gramophone/features/main/data/datasources/audius_remote_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/main_local_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/offline_download_data_source.dart';
@@ -28,6 +33,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<OfflineDownloadDataSource>(
     () => OfflineDownloadDataSource(),
   );
+  sl.registerLazySingleton<LocalMediaDataSource>(() => LocalMediaDataSource());
+  sl.registerLazySingleton<LibraryLocalCacheDataSource>(
+    () => LibraryLocalCacheDataSource(),
+  );
 
   sl.registerLazySingleton<MainRepository>(
     () => MainRepositoryImpl(sl(), sl(), sl(), sl()),
@@ -50,4 +59,16 @@ Future<void> setupServiceLocator() async {
     () => PlayerBloc(sl<AudioPlayerService>(), sl<PlayerRepository>()),
   );
   sl.registerFactory<HomeCubit>(() => HomeCubit(sl<MainRepository>()));
+  sl.registerLazySingleton<LibraryRepository>(
+    () => LibraryRepositoryImpl(
+      sl<LocalMediaDataSource>(),
+      sl<LibraryLocalCacheDataSource>(),
+      sl<MainRepository>(),
+      sl<OfflineDownloadDataSource>(),
+      sl<PlayerLocalDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<LibraryCubit>(
+    () => LibraryCubit(sl<LibraryRepository>()),
+  );
 }

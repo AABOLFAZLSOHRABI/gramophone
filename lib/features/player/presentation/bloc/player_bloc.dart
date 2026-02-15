@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
+import 'package:gramophone/domain/entities/track.dart';
+import 'package:gramophone/features/player/domain/models/player_playlist.dart';
 import 'package:gramophone/features/player/domain/repositories/player_repository.dart';
 import 'package:gramophone/features/player/domain/services/audio_player_service.dart';
 import 'package:gramophone/features/player/presentation/bloc/player_event.dart';
@@ -13,20 +16,28 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
   PlayerBloc(this._audioService, this._repository)
     : super(const PlayerState.initial()) {
     on<PlayTrackRequested>(_onPlayTrackRequested, transformer: restartable());
+    on<EnsureAutoplayRequested>(_onEnsureAutoplayRequested);
     on<TogglePlayPausePressed>(_onTogglePlayPausePressed);
     on<PlayPressed>(_onPlayPressed);
     on<PausePressed>(_onPausePressed);
     on<NextPressed>(_onNextPressed);
     on<PreviousPressed>(_onPreviousPressed);
     on<SeekChanged>(_onSeekChanged);
+    on<ToggleShufflePressed>(_onToggleShufflePressed);
+    on<ToggleRepeatPressed>(_onToggleRepeatPressed);
     on<ToggleLikePressed>(_onToggleLikePressed);
     on<AddToPlaylistPressed>(_onAddToPlaylistPressed);
+    on<LoadPlaylistsRequested>(_onLoadPlaylistsRequested);
+    on<CreatePlaylistPressed>(_onCreatePlaylistPressed);
     on<DownloadPressed>(_onDownloadPressed);
     on<MessageConsumed>(_onMessageConsumed);
     on<PositionUpdatedInternal>(_onPositionUpdated);
     on<DurationUpdatedInternal>(_onDurationUpdated);
     on<PlayingUpdatedInternal>(_onPlayingUpdated);
     on<CompletedChangedInternal>(_onCompletedChanged);
+    on<LikedTracksUpdatedInternal>(_onLikedTracksUpdated);
+    on<DownloadedTracksUpdatedInternal>(_onDownloadedTracksUpdated);
+    on<PlaylistsUpdatedInternal>(_onPlaylistsUpdated);
 
     _positionSub = _audioService.positionStream.listen((position) {
       add(PositionUpdatedInternal(position));
@@ -42,6 +53,15 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     _completedSub = _audioService.completedStream.listen((completed) {
       add(CompletedChangedInternal(completed));
     });
+    _likedSub = _repository.watchLikedTracks().listen((tracks) {
+      add(LikedTracksUpdatedInternal(tracks));
+    });
+    _downloadedSub = _repository.watchDownloadedTracks().listen((tracks) {
+      add(DownloadedTracksUpdatedInternal(tracks));
+    });
+    _playlistsSub = _repository.watchPlaylists().listen((playlists) {
+      add(PlaylistsUpdatedInternal(playlists));
+    });
   }
 
   final AudioPlayerService _audioService;
@@ -51,7 +71,11 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
   StreamSubscription<Duration?>? _durationSub;
   StreamSubscription<bool>? _playingSub;
   StreamSubscription<bool>? _completedSub;
+  StreamSubscription<List<PlayerPlaylist>>? _playlistsSub;
+  StreamSubscription<List<Track>>? _likedSub;
+  StreamSubscription<List<Track>>? _downloadedSub;
   int _requestCounter = 0;
+  final Random _random = Random();
 
   Future<void> _onPlayTrackRequested(
     PlayTrackRequested event,
@@ -212,7 +236,14 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     final queue = state.queue;
     if (queue.isEmpty) return;
 
-    final nextIndex = state.currentIndex + 1;
+    int nextIndex;
+    if (state.isShuffleOn && queue.length > 1) {
+      do {
+        nextIndex = _random.nextInt(queue.length);
+      } while (nextIndex == state.currentIndex);
+    } else {
+      nextIndex = state.currentIndex + 1;
+    }
     if (nextIndex < 0 || nextIndex >= queue.length) return;
 
     add(PlayTrackRequested(queue: queue, index: nextIndex, autoPlay: true));
@@ -252,8 +283,8 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     ToggleLikePressed event,
     Emitter<PlayerState> emit,
   ) async {
-    await _repository.toggleLike(event.trackId);
-    final liked = await _repository.isLiked(event.trackId);
+    await _repository.toggleLikeTrack(event.track);
+    final liked = await _repository.isLiked(event.track.id);
     emit(state.copyWith(isLiked: liked));
   }
 
@@ -268,6 +299,85 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     emit(
       state.copyWith(infoMessage: AppStrings.addedToPlaylist, clearError: true),
     );
+  }
+
+  Future<void> _onLoadPlaylistsRequested(
+    LoadPlaylistsRequested event,
+    Emitter<PlayerState> emit,
+  ) async {
+    emit(state.copyWith(isPlaylistsLoading: true, clearError: true));
+    try {
+      final playlists = await _repository.getPlaylists();
+      emit(
+        state.copyWith(
+          playlists: playlists,
+          isPlaylistsLoading: false,
+          clearError: true,
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          isPlaylistsLoading: false,
+          status: PlaybackStatus.error,
+          errorMessage: _toUiMessage(error),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onCreatePlaylistPressed(
+    CreatePlaylistPressed event,
+    Emitter<PlayerState> emit,
+  ) async {
+    final name = event.name.trim();
+    if (name.isEmpty) {
+      return;
+    }
+    try {
+      await _repository.createPlaylist(name);
+      final playlists = await _repository.getPlaylists();
+      emit(
+        state.copyWith(
+          playlists: playlists,
+          infoMessage: 'Playlist created',
+          clearError: true,
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: PlaybackStatus.error,
+          errorMessage: _toUiMessage(error),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onEnsureAutoplayRequested(
+    EnsureAutoplayRequested event,
+    Emitter<PlayerState> emit,
+  ) async {
+    final shouldStart =
+        state.currentTrack == null || state.status == PlaybackStatus.idle;
+    if (!shouldStart) {
+      return;
+    }
+    add(PlayTrackRequested(queue: [event.track], index: 0, autoPlay: true));
+  }
+
+  void _onToggleShufflePressed(
+    ToggleShufflePressed event,
+    Emitter<PlayerState> emit,
+  ) {
+    emit(state.copyWith(isShuffleOn: !state.isShuffleOn));
+  }
+
+  void _onToggleRepeatPressed(
+    ToggleRepeatPressed event,
+    Emitter<PlayerState> emit,
+  ) {
+    emit(state.copyWith(isRepeatOn: !state.isRepeatOn));
   }
 
   Future<void> _onDownloadPressed(
@@ -361,9 +471,49 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     CompletedChangedInternal event,
     Emitter<PlayerState> emit,
   ) {
-    if (event.completed) {
+    if (!event.completed) return;
+    if (state.isRepeatOn &&
+        state.currentTrack != null &&
+        state.queue.isNotEmpty) {
+      add(
+        PlayTrackRequested(
+          queue: state.queue,
+          index: state.currentIndex.clamp(0, state.queue.length - 1),
+          autoPlay: true,
+        ),
+      );
+      return;
+    }
+    if (state.currentIndex < state.queue.length - 1 || state.isShuffleOn) {
       add(const NextPressed());
     }
+  }
+
+  void _onLikedTracksUpdated(
+    LikedTracksUpdatedInternal event,
+    Emitter<PlayerState> emit,
+  ) {
+    final currentId = state.currentTrack?.id;
+    final liked =
+        currentId != null && event.tracks.any((item) => item.id == currentId);
+    emit(state.copyWith(likedTracks: event.tracks, isLiked: liked));
+  }
+
+  void _onDownloadedTracksUpdated(
+    DownloadedTracksUpdatedInternal event,
+    Emitter<PlayerState> emit,
+  ) {
+    final currentId = state.currentTrack?.id;
+    final downloaded =
+        currentId != null && event.tracks.any((item) => item.id == currentId);
+    emit(state.copyWith(isDownloaded: downloaded));
+  }
+
+  void _onPlaylistsUpdated(
+    PlaylistsUpdatedInternal event,
+    Emitter<PlayerState> emit,
+  ) {
+    emit(state.copyWith(playlists: event.playlists, isPlaylistsLoading: false));
   }
 
   void _logLifecycle({
@@ -384,6 +534,9 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     await _durationSub?.cancel();
     await _playingSub?.cancel();
     await _completedSub?.cancel();
+    await _playlistsSub?.cancel();
+    await _likedSub?.cancel();
+    await _downloadedSub?.cancel();
     await _audioService.dispose();
     return super.close();
   }

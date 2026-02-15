@@ -1,5 +1,6 @@
 import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/player/domain/models/playback_source.dart';
+import 'package:gramophone/features/player/domain/models/player_playlist.dart';
 
 enum PlaybackStatus { idle, loading, ready, playing, paused, buffering, error }
 
@@ -18,6 +19,11 @@ class PlayerState {
     required this.isDownloaded,
     required this.isLiked,
     required this.source,
+    required this.isShuffleOn,
+    required this.isRepeatOn,
+    required this.playlists,
+    required this.likedTracks,
+    required this.isPlaylistsLoading,
     required this.errorMessage,
     required this.infoMessage,
   });
@@ -36,6 +42,11 @@ class PlayerState {
       isDownloaded = false,
       isLiked = false,
       source = PlaybackSource.none,
+      isShuffleOn = false,
+      isRepeatOn = true,
+      playlists = const [],
+      likedTracks = const [],
+      isPlaylistsLoading = false,
       errorMessage = null,
       infoMessage = null;
 
@@ -52,6 +63,11 @@ class PlayerState {
   final bool isDownloaded;
   final bool isLiked;
   final PlaybackSource source;
+  final bool isShuffleOn;
+  final bool isRepeatOn;
+  final List<PlayerPlaylist> playlists;
+  final List<Track> likedTracks;
+  final bool isPlaylistsLoading;
   final String? errorMessage;
   final String? infoMessage;
 
@@ -69,6 +85,11 @@ class PlayerState {
     bool? isDownloaded,
     bool? isLiked,
     PlaybackSource? source,
+    bool? isShuffleOn,
+    bool? isRepeatOn,
+    List<PlayerPlaylist>? playlists,
+    List<Track>? likedTracks,
+    bool? isPlaylistsLoading,
     String? errorMessage,
     String? infoMessage,
     bool clearError = false,
@@ -88,6 +109,11 @@ class PlayerState {
       isDownloaded: isDownloaded ?? this.isDownloaded,
       isLiked: isLiked ?? this.isLiked,
       source: source ?? this.source,
+      isShuffleOn: isShuffleOn ?? this.isShuffleOn,
+      isRepeatOn: isRepeatOn ?? this.isRepeatOn,
+      playlists: playlists ?? this.playlists,
+      likedTracks: likedTracks ?? this.likedTracks,
+      isPlaylistsLoading: isPlaylistsLoading ?? this.isPlaylistsLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       infoMessage: clearInfo ? null : (infoMessage ?? this.infoMessage),
     );
