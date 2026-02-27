@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
@@ -11,8 +12,10 @@ class JustAudioPlayerService implements AudioPlayerService {
   JustAudioPlayerService(this._player);
 
   final AudioPlayer _player;
+  Future<void> _opQueue = Future<void>.value();
   String _lastTrackId = 'unknown';
   String? _lastSourceHost;
+  int _sourceSwitchCount = 0;
 
   @override
   Stream<Duration> get positionStream => _player.positionStream;
@@ -30,125 +33,147 @@ class JustAudioPlayerService implements AudioPlayerService {
 
   @override
   Future<PlaybackSource> setSource(Track track, {String? localFilePath}) async {
-    _lastTrackId = track.id;
-    try {
-      if (localFilePath != null && localFilePath.isNotEmpty) {
-        _lastSourceHost = 'local-file';
+    return _enqueue(() async {
+      _lastTrackId = track.id;
+      _sourceSwitchCount += 1;
+      final sw = Stopwatch()..start();
+      try {
+        if (localFilePath != null && localFilePath.isNotEmpty) {
+          _lastSourceHost = 'local-file';
+          developer.log(
+            'setSource phase local path=$localFilePath trackId=${track.id} '
+            'switchCount=$_sourceSwitchCount',
+            name: 'AudioService',
+          );
+          await _player.setFilePath(localFilePath);
+          await _player.seek(Duration.zero);
+          _logPlayerState(phase: AudioPlaybackPhase.setSource);
+          developer.log(
+            'setSource local completed in ${sw.elapsedMilliseconds}ms',
+            name: 'AudioService',
+          );
+          return PlaybackSource.local;
+        }
+
+        final streamUrl = track.streamUrl;
+        if (streamUrl == null || streamUrl.isEmpty) {
+          throw AudioPlaybackException(
+            phase: AudioPlaybackPhase.setSource,
+            trackId: track.id,
+            code: 'empty_stream_url',
+            message: 'Track stream url is empty.',
+          );
+        }
+
+        final parsed = Uri.tryParse(streamUrl);
+        final isValidScheme =
+            parsed != null &&
+            (parsed.scheme == 'http' ||
+                parsed.scheme == 'https' ||
+                parsed.scheme == 'file');
+        if (!isValidScheme) {
+          throw AudioPlaybackException(
+            phase: AudioPlaybackPhase.setSource,
+            trackId: track.id,
+            code: 'invalid_stream_url_scheme',
+            sourceHost: parsed?.host,
+            message: 'Stream url scheme is invalid.',
+          );
+        }
+        _lastSourceHost = parsed.host;
+
         developer.log(
-          'setSource phase local path=$localFilePath trackId=${track.id}',
+          'setSource phase stream host=${_lastSourceHost ?? 'n/a'} trackId=${track.id} '
+          'switchCount=$_sourceSwitchCount',
           name: 'AudioService',
         );
-        await _player.setFilePath(localFilePath);
+        await _player.setUrl(streamUrl);
         await _player.seek(Duration.zero);
         _logPlayerState(phase: AudioPlaybackPhase.setSource);
-        return PlaybackSource.local;
-      }
-
-      final streamUrl = track.streamUrl;
-      if (streamUrl == null || streamUrl.isEmpty) {
-        throw AudioPlaybackException(
+        developer.log(
+          'setSource stream completed in ${sw.elapsedMilliseconds}ms',
+          name: 'AudioService',
+        );
+        return PlaybackSource.stream;
+      } on AudioPlaybackException {
+        rethrow;
+      } catch (error) {
+        throw _mapError(
+          error,
           phase: AudioPlaybackPhase.setSource,
           trackId: track.id,
-          code: 'empty_stream_url',
-          message: 'Track stream url is empty.',
         );
       }
-
-      final parsed = Uri.tryParse(streamUrl);
-      final isValidScheme =
-          parsed != null &&
-          (parsed.scheme == 'http' ||
-              parsed.scheme == 'https' ||
-              parsed.scheme == 'file');
-      if (!isValidScheme) {
-        throw AudioPlaybackException(
-          phase: AudioPlaybackPhase.setSource,
-          trackId: track.id,
-          code: 'invalid_stream_url_scheme',
-          sourceHost: parsed?.host,
-          message: 'Stream url scheme is invalid.',
-        );
-      }
-      _lastSourceHost = parsed.host;
-
-      developer.log(
-        'setSource phase stream host=${_lastSourceHost ?? 'n/a'} trackId=${track.id}',
-        name: 'AudioService',
-      );
-      await _player.setUrl(streamUrl);
-      await _player.seek(Duration.zero);
-      _logPlayerState(phase: AudioPlaybackPhase.setSource);
-      return PlaybackSource.stream;
-    } on AudioPlaybackException {
-      rethrow;
-    } catch (error) {
-      throw _mapError(
-        error,
-        phase: AudioPlaybackPhase.setSource,
-        trackId: track.id,
-      );
-    }
+    });
   }
 
   @override
   Future<void> stop() async {
-    try {
-      developer.log('stop phase trackId=$_lastTrackId', name: 'AudioService');
-      await _player.stop();
-      _logPlayerState(phase: AudioPlaybackPhase.stop);
-    } catch (error) {
-      throw _mapError(
-        error,
-        phase: AudioPlaybackPhase.stop,
-        trackId: _lastTrackId,
-      );
-    }
+    return _enqueue(() async {
+      try {
+        developer.log('stop phase trackId=$_lastTrackId', name: 'AudioService');
+        await _player.stop();
+        _logPlayerState(phase: AudioPlaybackPhase.stop);
+      } catch (error) {
+        throw _mapError(
+          error,
+          phase: AudioPlaybackPhase.stop,
+          trackId: _lastTrackId,
+        );
+      }
+    });
   }
 
   @override
   Future<void> play() async {
-    try {
-      developer.log(
-        'play phase trackId=$_lastTrackId host=${_lastSourceHost ?? 'n/a'}',
-        name: 'AudioService',
-      );
-      await _player.play();
-      _logPlayerState(phase: AudioPlaybackPhase.play);
-    } catch (error) {
-      throw _mapError(
-        error,
-        phase: AudioPlaybackPhase.play,
-        trackId: _lastTrackId,
-      );
-    }
+    return _enqueue(() async {
+      try {
+        developer.log(
+          'play phase trackId=$_lastTrackId host=${_lastSourceHost ?? 'n/a'}',
+          name: 'AudioService',
+        );
+        await _player.play();
+        _logPlayerState(phase: AudioPlaybackPhase.play);
+      } catch (error) {
+        throw _mapError(
+          error,
+          phase: AudioPlaybackPhase.play,
+          trackId: _lastTrackId,
+        );
+      }
+    });
   }
 
   @override
   Future<void> pause() async {
-    try {
-      await _player.pause();
-      _logPlayerState(phase: AudioPlaybackPhase.pause);
-    } catch (error) {
-      throw _mapError(
-        error,
-        phase: AudioPlaybackPhase.pause,
-        trackId: _lastTrackId,
-      );
-    }
+    return _enqueue(() async {
+      try {
+        await _player.pause();
+        _logPlayerState(phase: AudioPlaybackPhase.pause);
+      } catch (error) {
+        throw _mapError(
+          error,
+          phase: AudioPlaybackPhase.pause,
+          trackId: _lastTrackId,
+        );
+      }
+    });
   }
 
   @override
   Future<void> seek(Duration position) async {
-    try {
-      await _player.seek(position);
-      _logPlayerState(phase: AudioPlaybackPhase.seek);
-    } catch (error) {
-      throw _mapError(
-        error,
-        phase: AudioPlaybackPhase.seek,
-        trackId: _lastTrackId,
-      );
-    }
+    return _enqueue(() async {
+      try {
+        await _player.seek(position);
+        _logPlayerState(phase: AudioPlaybackPhase.seek);
+      } catch (error) {
+        throw _mapError(
+          error,
+          phase: AudioPlaybackPhase.seek,
+          trackId: _lastTrackId,
+        );
+      }
+    });
   }
 
   @override
@@ -182,7 +207,9 @@ class JustAudioPlayerService implements AudioPlayerService {
         phase: phase,
         trackId: trackId,
         code: error.code,
-        message: error.message ?? error.details?.toString(),
+        message:
+            '${error.message ?? error.details?.toString()} '
+            '(processing=${_player.processingState})',
         sourceHost: _lastSourceHost,
       );
     }
@@ -192,7 +219,7 @@ class JustAudioPlayerService implements AudioPlayerService {
         phase: phase,
         trackId: trackId,
         code: error.code.toString(),
-        message: error.message,
+        message: '${error.message} (processing=${_player.processingState})',
         sourceHost: _lastSourceHost,
       );
     }
@@ -202,7 +229,7 @@ class JustAudioPlayerService implements AudioPlayerService {
         phase: phase,
         trackId: trackId,
         code: 'interrupted',
-        message: error.message,
+        message: '${error.message} (processing=${_player.processingState})',
         sourceHost: _lastSourceHost,
       );
     }
@@ -224,5 +251,18 @@ class JustAudioPlayerService implements AudioPlayerService {
       'duration=${_player.duration?.inSeconds}',
       name: 'AudioService',
     );
+  }
+
+  Future<T> _enqueue<T>(Future<T> Function() operation) {
+    final completer = Completer<T>();
+    _opQueue = _opQueue.then((_) async {
+      try {
+        final result = await operation();
+        completer.complete(result);
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    return completer.future;
   }
 }

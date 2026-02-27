@@ -168,7 +168,18 @@ class AppRouter {
                 routes: [
                   GoRoute(
                     path: RouteNames.searchInputPage,
-                    builder: (context, state) => const SearchInputPage(),
+                    builder: (context, state) {
+                      final extra = state.extra;
+                      final map = extra is Map
+                          ? Map<String, dynamic>.from(extra)
+                          : null;
+                      final initialGenre = map?['genre'] as String?;
+                      final initialAction = map;
+                      return SearchInputPage(
+                        initialGenre: initialGenre,
+                        initialAction: initialAction,
+                      );
+                    },
                   ),
                 ],
               ),

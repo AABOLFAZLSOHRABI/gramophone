@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramophone/core/network/failure.dart';
 import 'package:gramophone/core/result/result.dart';
+import 'package:gramophone/domain/entities/search_playlist.dart';
+import 'package:gramophone/domain/entities/search_user.dart';
 import 'package:gramophone/domain/entities/review_item.dart';
 import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/main/domain/repositories/main_repository.dart';
@@ -102,6 +104,21 @@ class FakeMainRepository implements MainRepository {
   }
 
   @override
+  Future<Result<List<Track>>> getUndergroundTrendingTracksFromApi({
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    return const ResultSuccess([]);
+  }
+
+  @override
+  Future<Result<List<Track>>> getFeelingLuckyTracksFromApi({
+    int limit = 20,
+  }) async {
+    return const ResultSuccess([]);
+  }
+
+  @override
   Future<Result<List<ReviewItem>>> getReviewItemsFromApi({
     int offset = 0,
     int limit = 10,
@@ -131,6 +148,36 @@ class FakeMainRepository implements MainRepository {
   @override
   Future<Result<void>> removeOfflineTrack(String trackId) async {
     return const ResultSuccess(null);
+  }
+
+  @override
+  Future<Result<List<SearchPlaylist>>> searchPlaylists({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    return const ResultSuccess([]);
+  }
+
+  @override
+  Future<Result<List<Track>>> searchTracks({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    return const ResultSuccess([]);
+  }
+
+  @override
+  Future<Result<List<SearchUser>>> searchUsers({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    return const ResultSuccess([]);
   }
 
   @override

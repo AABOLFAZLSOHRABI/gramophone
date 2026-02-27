@@ -13,7 +13,7 @@ public final class Id3MetadataRetriever: MetadataRetrieverProtocol {
     "Disco",
     "Funk",
     "Grunge",
-    "Hip-Hop",
+    "Hip Hop",
     "Jazz",
     "Metal",
     "New Age",

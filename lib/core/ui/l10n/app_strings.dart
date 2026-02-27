@@ -65,6 +65,13 @@ abstract final class AppStrings {
   static const searchInputPlaceholder = 'What do you want to listen to?';
   static const searchComingSoon =
       'Search results and suggestions will appear here.';
+  static const searchMinCharsHint = 'Enter at least 2 characters to search.';
+  static const searchNoResults = 'No results found for your query.';
+  static const searchTracksSection = 'Tracks';
+  static const searchArtistsSection = 'Artists';
+  static const searchPlaylistsSection = 'Playlists';
+  static const searchSectionNotImplemented =
+      'This section is not implemented yet.';
   static const libraryQuickAccess = 'Quick access';
   static const libraryAlbums = 'Albums';
   static const libraryLikedSongs = 'Liked Songs';
@@ -77,12 +84,14 @@ abstract final class AppStrings {
       'Downloaded tracks will appear here after you save songs for offline listening.';
   static const genrePop = 'Pop';
   static const genreIndie = 'Indie';
+  static const genreHipHop = 'Hip Hop';
   static const categoryNewsPolitics = 'News &\nPolitics';
   static const categoryComedy = 'Comedy';
   static const categoryCharts = 'Charts';
   static const categoryMadeForYou = 'Made for you';
   static const categoryPodcasts = 'Podcasts';
   static const categoryWrapped2026 = '2026 Wrapped';
+  static const categoryUnderground = 'Underground';
   static const miniPlayerOpen = 'Open now playing';
   static const miniPlayerPlayPause = 'Play or pause';
   static const miniPlayerNext = 'Next track';
@@ -119,6 +128,11 @@ abstract final class AppStrings {
   static const downloadedSuccessfully = 'Downloaded successfully';
   static const audioBackendUnavailable =
       'Audio backend is not available on this build. Please run a full restart.';
+  static const audioPlaybackIssue =
+      'Playback is temporarily unavailable. Please try again.';
+  static const audioNetworkIssue =
+      'Network is unstable. Please check your connection and try again.';
+  static const audioSeekIssue = 'Unable to seek right now. Please try again.';
   static const queueIsEmpty = 'Queue is empty.';
   static const tryAgainWithFullRestart =
       'Try a full restart: flutter clean && flutter pub get && flutter run -d windows';

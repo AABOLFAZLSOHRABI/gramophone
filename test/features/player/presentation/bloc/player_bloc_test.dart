@@ -64,10 +64,62 @@ void main() {
 
     expect(bloc.state.playlists.any((item) => item.name == 'Road'), isTrue);
   });
+
+  test('same track replay avoids setSource/stop churn', () async {
+    const track = Track(id: 't1', title: 'Song', artist: 'Artist');
+
+    bloc.add(const EnsureAutoplayRequested(track));
+    await _waitFor(
+      () => audioService.setSourceCalls == 1,
+      timeout: const Duration(milliseconds: 300),
+    );
+    expect(audioService.setSourceCalls, 1);
+    expect(audioService.stopCalls, 0);
+
+    bloc.add(
+      const PlayTrackRequested(queue: [track], index: 0, autoPlay: true),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(audioService.setSourceCalls, 1);
+    expect(audioService.stopCalls, 0);
+    expect(audioService.playCalls, greaterThan(0));
+  });
+
+  test('repeat completion seeks to zero without reloading source', () async {
+    const track = Track(id: 't1', title: 'Song', artist: 'Artist');
+
+    bloc.add(const EnsureAutoplayRequested(track));
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    expect(audioService.setSourceCalls, 1);
+
+    bloc.add(const CompletedChangedInternal(true));
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    expect(audioService.setSourceCalls, 1);
+    expect(audioService.seekCalls, greaterThan(0));
+    expect(bloc.state.isPlaying, isTrue);
+  });
+}
+
+Future<void> _waitFor(
+  bool Function() predicate, {
+  Duration timeout = const Duration(milliseconds: 500),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (!predicate()) {
+    if (stopwatch.elapsed >= timeout) {
+      break;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
 }
 
 class FakeAudioPlayerService implements AudioPlayerService {
   int playCalls = 0;
+  int stopCalls = 0;
+  int setSourceCalls = 0;
+  int seekCalls = 0;
   final _position = StreamController<Duration>.broadcast();
   final _duration = StreamController<Duration?>.broadcast();
   final _playing = StreamController<bool>.broadcast();
@@ -106,17 +158,20 @@ class FakeAudioPlayerService implements AudioPlayerService {
 
   @override
   Future<void> seek(Duration position) async {
+    seekCalls += 1;
     _position.add(position);
   }
 
   @override
   Future<PlaybackSource> setSource(Track track, {String? localFilePath}) async {
+    setSourceCalls += 1;
     _duration.add(const Duration(minutes: 3));
     return PlaybackSource.stream;
   }
 
   @override
   Future<void> stop() async {
+    stopCalls += 1;
     _playing.add(false);
   }
 }

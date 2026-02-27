@@ -14,18 +14,38 @@ class SearchTabPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const topGenres = [
-      _SearchTileData(title: AppStrings.genreIndie, color: Color(0xFF2D5D46)),
-      _SearchTileData(title: AppStrings.genrePop, color: Color(0xFF6C3DB7)),
+      _SearchTileData(
+        title: AppStrings.genreIndie,
+        color: Color(0xFF2D5D46),
+        actionType: _SearchTileActionType.genreTrending,
+        value: AppStrings.genreIndie,
+      ),
+      _SearchTileData(
+        title: AppStrings.genrePop,
+        color: Color(0xFF6C3DB7),
+        actionType: _SearchTileActionType.genreTrending,
+        value: AppStrings.genrePop,
+      ),
+      _SearchTileData(
+        title: AppStrings.genreHipHop,
+        color: Color(0xFF8A2E2E),
+        actionType: _SearchTileActionType.genreTrending,
+        value: AppStrings.genreHipHop,
+      ),
     ];
 
     const popularPodcasts = [
       _SearchTileData(
         title: AppStrings.categoryNewsPolitics,
         color: Color(0xFF255BC2),
+        actionType: _SearchTileActionType.playlistSearch,
+        value: 'News Politics',
       ),
       _SearchTileData(
         title: AppStrings.categoryComedy,
         color: Color(0xFFC44D30),
+        actionType: _SearchTileActionType.playlistSearch,
+        value: 'Comedy',
       ),
     ];
 
@@ -33,18 +53,23 @@ class SearchTabPage extends StatelessWidget {
       _SearchTileData(
         title: AppStrings.categoryCharts,
         color: Color(0xFF7D64AE),
+        actionType: _SearchTileActionType.tracksTrending,
       ),
       _SearchTileData(
         title: AppStrings.categoryMadeForYou,
         color: Color(0xFF5B8C47),
+        actionType: _SearchTileActionType.feelingLucky,
       ),
       _SearchTileData(
         title: AppStrings.categoryPodcasts,
         color: Color(0xFF2A3D73),
+        actionType: _SearchTileActionType.playlistSearch,
+        value: 'Podcasts',
       ),
       _SearchTileData(
-        title: AppStrings.categoryWrapped2026,
+        title: AppStrings.categoryUnderground,
         color: Color(0xFF8EA54A),
+        actionType: _SearchTileActionType.tracksUnderground,
       ),
     ];
 
@@ -167,10 +192,17 @@ class _TilesGrid extends StatelessWidget {
 }
 
 class _SearchTileData {
-  const _SearchTileData({required this.title, required this.color});
+  const _SearchTileData({
+    required this.title,
+    required this.color,
+    required this.actionType,
+    this.value,
+  });
 
   final String title;
   final Color color;
+  final _SearchTileActionType actionType;
+  final String? value;
 }
 
 class _SearchTile extends StatelessWidget {
@@ -185,7 +217,16 @@ class _SearchTile extends StatelessWidget {
       child: Material(
         color: item.color,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            context.push(
+              RouteNames.searchInputPageLocation,
+              extra: <String, dynamic>{
+                'mode': item.actionType.name,
+                if (item.value != null) 'value': item.value,
+                'title': item.title,
+              },
+            );
+          },
           child: Stack(
             children: [
               // Title
@@ -243,4 +284,12 @@ class _SearchTile extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _SearchTileActionType {
+  genreTrending,
+  tracksTrending,
+  tracksUnderground,
+  feelingLucky,
+  playlistSearch,
 }

@@ -11,6 +11,7 @@ import 'package:gramophone/features/main/data/datasources/offline_download_data_
 import 'package:gramophone/features/main/data/main_repository_impl.dart';
 import 'package:gramophone/features/main/domain/repositories/main_repository.dart';
 import 'package:gramophone/features/main/presentation/cubit/home_cubit.dart';
+import 'package:gramophone/features/main/presentation/cubit/search_cubit.dart';
 import 'package:gramophone/features/player/data/datasources/player_local_data_source.dart';
 import 'package:gramophone/features/player/data/player_repository_impl.dart';
 import 'package:gramophone/features/player/data/services/just_audio_player_service.dart';
@@ -59,6 +60,7 @@ Future<void> setupServiceLocator() async {
     () => PlayerBloc(sl<AudioPlayerService>(), sl<PlayerRepository>()),
   );
   sl.registerFactory<HomeCubit>(() => HomeCubit(sl<MainRepository>()));
+  sl.registerFactory<SearchCubit>(() => SearchCubit(sl<MainRepository>()));
   sl.registerLazySingleton<LibraryRepository>(
     () => LibraryRepositoryImpl(
       sl<LocalMediaDataSource>(),

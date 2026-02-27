@@ -13,12 +13,16 @@ import '../../../core/result/result.dart';
 import '../../../data/mappers/playlist_mapper.dart';
 import '../../../data/dtos/track_dto.dart';
 import '../../../data/mappers/track_mapper.dart';
+import '../../../domain/entities/search_playlist.dart';
+import '../../../domain/entities/search_user.dart';
 import '../../../domain/entities/review_item.dart';
 import '../../../domain/entities/track.dart';
 import '../domain/repositories/main_repository.dart';
 import 'datasources/audius_remote_data_source.dart';
 import 'datasources/main_local_data_source.dart';
 import 'datasources/offline_download_data_source.dart';
+import 'models/search_playlist_model.dart';
+import 'models/search_user_model.dart';
 
 class MainRepositoryImpl implements MainRepository {
   MainRepositoryImpl(
@@ -52,6 +56,34 @@ class MainRepositoryImpl implements MainRepository {
         time: time,
         genre: genre,
       );
+      return ResultSuccess(_toTrackEntities(remoteTracks));
+    } catch (error) {
+      return ResultFailure(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<List<Track>>> getUndergroundTrendingTracksFromApi({
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final remoteTracks = await _remote.getUndergroundTrendingTracks(
+        offset: offset,
+        limit: limit,
+      );
+      return ResultSuccess(_toTrackEntities(remoteTracks));
+    } catch (error) {
+      return ResultFailure(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<List<Track>>> getFeelingLuckyTracksFromApi({
+    int limit = 20,
+  }) async {
+    try {
+      final remoteTracks = await _remote.getFeelingLuckyTracks(limit: limit);
       return ResultSuccess(_toTrackEntities(remoteTracks));
     } catch (error) {
       return ResultFailure(_mapFailure(error));
@@ -177,8 +209,70 @@ class MainRepositoryImpl implements MainRepository {
         limit: limit,
         time: time,
       );
-      final items = playlists.map((playlist) => playlist.toReviewItem()).toList();
+      final items = playlists
+          .map((playlist) => playlist.toReviewItem())
+          .toList();
       return ResultSuccess(items);
+    } catch (error) {
+      return ResultFailure(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<List<Track>>> searchTracks({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    try {
+      final remoteTracks = await _remote.searchTracks(
+        query: query,
+        offset: offset,
+        limit: limit,
+        sortMethod: sortMethod,
+      );
+      return ResultSuccess(_toTrackEntities(remoteTracks));
+    } catch (error) {
+      return ResultFailure(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<List<SearchUser>>> searchUsers({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    try {
+      final users = await _remote.searchUsers(
+        query: query,
+        offset: offset,
+        limit: limit,
+        sortMethod: sortMethod,
+      );
+      return ResultSuccess(_toSearchUserEntities(users));
+    } catch (error) {
+      return ResultFailure(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<List<SearchPlaylist>>> searchPlaylists({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    try {
+      final playlists = await _remote.searchPlaylists(
+        query: query,
+        offset: offset,
+        limit: limit,
+        sortMethod: sortMethod,
+      );
+      return ResultSuccess(_toSearchPlaylistEntities(playlists));
     } catch (error) {
       return ResultFailure(_mapFailure(error));
     }
@@ -221,7 +315,8 @@ class MainRepositoryImpl implements MainRepository {
   }) async {
     final cached = await _local.getCachedTrendingTracks();
     final fetchedAt = await _local.getTrendingCacheTimestamp();
-    final cacheIsFresh = cached.isNotEmpty &&
+    final cacheIsFresh =
+        cached.isNotEmpty &&
         fetchedAt != null &&
         _clock().difference(fetchedAt) <= _cacheTtl;
 
@@ -256,6 +351,36 @@ class MainRepositoryImpl implements MainRepository {
   List<Track> _toTrackEntities(List<TrackDto> dtos) {
     return dtos
         .map((dto) => dto.toEntity(apiBaseUrl: Endpoints.audiusBaseUrl))
+        .toList();
+  }
+
+  List<SearchUser> _toSearchUserEntities(List<SearchUserModel> models) {
+    return models
+        .map(
+          (item) => SearchUser(
+            id: item.id,
+            name: item.name,
+            handle: item.handle,
+            imageUrl: item.imageUrl,
+            isVerified: item.isVerified,
+          ),
+        )
+        .toList();
+  }
+
+  List<SearchPlaylist> _toSearchPlaylistEntities(
+    List<SearchPlaylistModel> models,
+  ) {
+    return models
+        .map(
+          (item) => SearchPlaylist(
+            id: item.id,
+            name: item.name,
+            creatorName: item.creatorName,
+            imageUrl: item.imageUrl,
+            trackCount: item.trackCount,
+          ),
+        )
         .toList();
   }
 

@@ -7,12 +7,16 @@ import 'package:gramophone/data/dtos/artwork_dto.dart';
 import 'package:gramophone/data/dtos/playlist_dto.dart';
 import 'package:gramophone/data/dtos/track_dto.dart';
 import 'package:gramophone/domain/entities/review_item.dart';
+import 'package:gramophone/domain/entities/search_playlist.dart';
+import 'package:gramophone/domain/entities/search_user.dart';
 import 'package:gramophone/domain/entities/track.dart';
 import 'package:gramophone/features/main/data/datasources/audius_remote_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/main_local_data_source.dart';
 import 'package:gramophone/features/main/data/datasources/offline_download_data_source.dart';
 import 'package:gramophone/features/main/data/main_repository_impl.dart';
 import 'package:gramophone/features/main/data/models/downloaded_track_record.dart';
+import 'package:gramophone/features/main/data/models/search_playlist_model.dart';
+import 'package:gramophone/features/main/data/models/search_user_model.dart';
 
 void main() {
   group('MainRepositoryImpl', () {
@@ -181,6 +185,57 @@ void main() {
       final tracks = (results.first as ResultSuccess<List<Track>>).data;
       expect(tracks.first.id, '5');
     });
+
+    test('search methods return mapped entities', () async {
+      remote.searchTracksResult = [_dto(id: 't-1', title: 'track')];
+      remote.searchUsersResult = const [
+        SearchUserModel(
+          id: 'u-1',
+          name: 'Artist One',
+          handle: 'artist1',
+          imageUrl: 'https://img/u1.jpg',
+          isVerified: true,
+        ),
+      ];
+      remote.searchPlaylistsResult = const [
+        SearchPlaylistModel(
+          id: 'p-1',
+          name: 'Playlist One',
+          creatorName: 'DJ One',
+          imageUrl: 'https://img/p1.jpg',
+          trackCount: 12,
+        ),
+      ];
+
+      final tracks = await repository.searchTracks(query: 'a');
+      final users = await repository.searchUsers(query: 'a');
+      final playlists = await repository.searchPlaylists(query: 'a');
+
+      expect(tracks, isA<ResultSuccess<List<Track>>>());
+      expect(users, isA<ResultSuccess<List<SearchUser>>>());
+      expect(playlists, isA<ResultSuccess<List<SearchPlaylist>>>());
+      expect((tracks as ResultSuccess<List<Track>>).data.first.id, 't-1');
+      expect((users as ResultSuccess<List<SearchUser>>).data.first.id, 'u-1');
+      expect(
+        (playlists as ResultSuccess<List<SearchPlaylist>>).data.first.id,
+        'p-1',
+      );
+    });
+
+    test('search methods map dio failure', () async {
+      remote.error = DioException(
+        requestOptions: RequestOptions(path: '/tracks/search'),
+        type: DioExceptionType.connectionError,
+      );
+
+      final tracks = await repository.searchTracks(query: 'a');
+      final users = await repository.searchUsers(query: 'a');
+      final playlists = await repository.searchPlaylists(query: 'a');
+
+      expect(tracks, isA<ResultFailure<List<Track>>>());
+      expect(users, isA<ResultFailure<List<SearchUser>>>());
+      expect(playlists, isA<ResultFailure<List<SearchPlaylist>>>());
+    });
   });
 }
 
@@ -193,6 +248,9 @@ class FakeAudiusRemoteDataSource extends AudiusRemoteDataSource {
 
   List<TrackDto> responseTracks = const [];
   List<PlaylistDto> responsePlaylists = const [];
+  List<TrackDto> searchTracksResult = const [];
+  List<SearchUserModel> searchUsersResult = const [];
+  List<SearchPlaylistModel> searchPlaylistsResult = const [];
   Object? error;
 
   @override
@@ -219,6 +277,45 @@ class FakeAudiusRemoteDataSource extends AudiusRemoteDataSource {
       throw error!;
     }
     return responsePlaylists;
+  }
+
+  @override
+  Future<List<TrackDto>> searchTracks({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    if (error != null) {
+      throw error!;
+    }
+    return searchTracksResult;
+  }
+
+  @override
+  Future<List<SearchUserModel>> searchUsers({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    if (error != null) {
+      throw error!;
+    }
+    return searchUsersResult;
+  }
+
+  @override
+  Future<List<SearchPlaylistModel>> searchPlaylists({
+    required String query,
+    int offset = 0,
+    int limit = 20,
+    String sortMethod = 'relevant',
+  }) async {
+    if (error != null) {
+      throw error!;
+    }
+    return searchPlaylistsResult;
   }
 }
 

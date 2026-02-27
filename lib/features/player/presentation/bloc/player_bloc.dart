@@ -6,6 +6,7 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gramophone/core/ui/l10n/app_strings.dart';
 import 'package:gramophone/domain/entities/track.dart';
+import 'package:gramophone/features/player/domain/models/playback_source.dart';
 import 'package:gramophone/features/player/domain/models/player_playlist.dart';
 import 'package:gramophone/features/player/domain/repositories/player_repository.dart';
 import 'package:gramophone/features/player/domain/services/audio_player_service.dart';
@@ -76,6 +77,7 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
   StreamSubscription<List<Track>>? _downloadedSub;
   int _requestCounter = 0;
   final Random _random = Random();
+  bool _isSwitchingSource = false;
 
   Future<void> _onPlayTrackRequested(
     PlayTrackRequested event,
@@ -98,6 +100,58 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
         ? Duration(seconds: track.duration!)
         : Duration.zero;
     final requestId = ++_requestCounter;
+    final currentTrack = state.currentTrack;
+    final isSameTrack = currentTrack != null && currentTrack.id == track.id;
+
+    if (_isSwitchingSource && !isSameTrack) {
+      _logLifecycle(
+        requestId: requestId,
+        trackId: track.id,
+        status: PlaybackStatus.loading,
+        message: 'source switch in progress, queuing latest request',
+      );
+    }
+
+    if (isSameTrack && state.source != PlaybackSource.none) {
+      _logLifecycle(
+        requestId: requestId,
+        trackId: track.id,
+        status: state.status,
+        message: 'same-track play request, avoiding source reload',
+      );
+      emit(
+        state.copyWith(
+          queue: event.queue,
+          currentIndex: index,
+          currentTrack: track,
+          activeRequestId: requestId,
+          clearError: true,
+          clearInfo: true,
+        ),
+      );
+      if (event.autoPlay && !state.isPlaying) {
+        try {
+          await _audioService.play();
+          if (requestId != _requestCounter) return;
+          emit(
+            state.copyWith(
+              isPlaying: true,
+              status: PlaybackStatus.playing,
+              clearError: true,
+            ),
+          );
+        } catch (error) {
+          if (requestId != _requestCounter) return;
+          emit(
+            state.copyWith(
+              status: PlaybackStatus.error,
+              errorMessage: _toUiMessage(error),
+            ),
+          );
+        }
+      }
+      return;
+    }
 
     _logLifecycle(
       requestId: requestId,
@@ -124,7 +178,10 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     );
 
     try {
-      await _audioService.stop();
+      _isSwitchingSource = true;
+      if (state.source != PlaybackSource.none) {
+        await _audioService.stop();
+      }
       final localPath = await _repository.getLocalAudioPath(track.id);
       final source = await _audioService.setSource(
         track,
@@ -171,6 +228,8 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
           errorMessage: _toUiMessage(error),
         ),
       );
+    } finally {
+      _isSwitchingSource = false;
     }
   }
 
@@ -420,20 +479,19 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
       return AppStrings.audioBackendUnavailable;
     }
     if (error is AudioPlaybackException) {
-      final phase = switch (error.phase) {
-        AudioPlaybackPhase.setSource => 'setSource',
-        AudioPlaybackPhase.play => 'play',
-        AudioPlaybackPhase.pause => 'pause',
-        AudioPlaybackPhase.seek => 'seek',
-        AudioPlaybackPhase.stop => 'stop',
-      };
-      final host = (error.sourceHost != null && error.sourceHost!.isNotEmpty)
-          ? 'host=${error.sourceHost}'
-          : 'host=n/a';
-      final code = error.code ?? 'unknown';
-      return 'Audio failed in $phase ($code, $host). ${error.message ?? AppStrings.tryAgainWithFullRestart}';
+      final errorText = '${error.code ?? ''} ${error.message ?? ''}'
+          .toLowerCase();
+      if (errorText.contains('timeout') ||
+          errorText.contains('connection') ||
+          errorText.contains('network')) {
+        return AppStrings.audioNetworkIssue;
+      }
+      if (error.phase == AudioPlaybackPhase.seek) {
+        return AppStrings.audioSeekIssue;
+      }
+      return AppStrings.audioPlaybackIssue;
     }
-    return error.toString();
+    return AppStrings.somethingWentWrong;
   }
 
   void _onMessageConsumed(MessageConsumed event, Emitter<PlayerState> emit) {
@@ -467,21 +525,33 @@ class PlayerBloc extends Bloc<PlayerEvent, PlayerState> {
     emit(state.copyWith(isPlaying: event.isPlaying, status: status));
   }
 
-  void _onCompletedChanged(
+  Future<void> _onCompletedChanged(
     CompletedChangedInternal event,
     Emitter<PlayerState> emit,
-  ) {
+  ) async {
     if (!event.completed) return;
     if (state.isRepeatOn &&
         state.currentTrack != null &&
         state.queue.isNotEmpty) {
-      add(
-        PlayTrackRequested(
-          queue: state.queue,
-          index: state.currentIndex.clamp(0, state.queue.length - 1),
-          autoPlay: true,
-        ),
-      );
+      try {
+        await _audioService.seek(Duration.zero);
+        await _audioService.play();
+        emit(
+          state.copyWith(
+            position: Duration.zero,
+            isPlaying: true,
+            status: PlaybackStatus.playing,
+            clearError: true,
+          ),
+        );
+      } catch (error) {
+        emit(
+          state.copyWith(
+            status: PlaybackStatus.error,
+            errorMessage: _toUiMessage(error),
+          ),
+        );
+      }
       return;
     }
     if (state.currentIndex < state.queue.length - 1 || state.isShuffleOn) {

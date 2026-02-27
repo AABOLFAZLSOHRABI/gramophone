@@ -37,6 +37,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   final PlayerBloc _bloc = sl<PlayerBloc>();
   final TextEditingController _playlistNameCtrl = TextEditingController();
   bool _autoplayEnsured = false;
+  String? _lastSnackMessage;
+  DateTime? _lastSnackAt;
 
   @override
   void initState() {
@@ -140,6 +142,20 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     );
   }
 
+  bool _shouldShowMessage(String message) {
+    final now = DateTime.now();
+    final isDuplicate =
+        _lastSnackMessage == message &&
+        _lastSnackAt != null &&
+        now.difference(_lastSnackAt!) < const Duration(seconds: 2);
+    if (isDuplicate) {
+      return false;
+    }
+    _lastSnackMessage = message;
+    _lastSnackAt = now;
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final albumImageProvider = Assets.images.gramophoneBackground.provider();
@@ -148,9 +164,11 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
       listener: (context, state) {
         final message = state.errorMessage ?? state.infoMessage;
         if (message != null && message.isNotEmpty) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(message)));
+          if (_shouldShowMessage(message)) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
+          }
           _bloc.add(const MessageConsumed());
         }
       },
